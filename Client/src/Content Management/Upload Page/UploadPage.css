@@ -1,0 +1,128 @@
+.upload-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.upload-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.upload-form label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.upload-form input,
+.upload-form textarea,
+.upload-form select {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.upload-form button {
+  background: #0077cc;
+  color: white;
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.upload-form button:hover {
+  background: #005fa3;
+} 
+.media-section {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+  position: relative;
+}
+.media-section h2 {
+  margin-bottom: 10px;
+}
+.add-media-button {
+  background: #28a745;
+  color: white;
+  padding: 10px 15px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.add-media-button:hover {
+  background: #218838;
+}
+.media-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.media-error {
+  color: red;
+  font-weight: bold;
+}
+.media-form-inline{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.desc-in{
+  font-size: 13px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  
+}
+
+/* */
+.added-media-list {
+  margin-top: 15px;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+  max-width: 100%; /* prevent overflow */
+  overflow-x: hidden; /* hide any accidental overflow */
+}
+.added-media-item {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap; /* allow items to wrap on small screens */
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  white-space: normal; /* ✅ let text (like URLs) wrap */
+  word-break: break-word; /* ✅ wrap long words/urls */
+  max-width: 100%; /* ensure item fits viewport */
+}
+.article-media {
+  width: 60px; /* slightly smaller on mobile */
+  height: auto;
+  margin: 0.5rem 0;
+  border-radius: 10px;
+  flex-shrink: 0; /* image won’t shrink too much */
+}
+.media-info {
+  flex: 1; /* text takes remaining space */
+  min-width: 0; /* ✅ allows proper shrinking */
+}
+
+
+

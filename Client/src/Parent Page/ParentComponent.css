@@ -1,0 +1,25 @@
+.parent-component-template-small,.parent-component-template-large{
+    display: grid;
+    grid-template-rows:80px 1fr;
+    padding: 10px 25px;
+    font-size: 12px;
+    height: 100dvh;
+    gap: 30px;
+
+}
+.parent-component-template-small.disabled{
+    background-color: rgb(230, 227, 227);
+}
+.parent-component-template-large{
+    padding: 10px  25px;
+    font-size: 14px;
+}
+.parent-component-template-large.disabled{
+     background-color: gray;
+}
+.menu-collapser-icon{
+    
+}
+.nav-bar-section{
+    /* background-color: red; */
+}

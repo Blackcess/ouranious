@@ -1,0 +1,18 @@
+.thumb-nail-card-container{
+    display: flex;
+    padding: 10px;
+    align-items: center;
+    border-bottom: 1px solid gray;
+    justify-content: space-between;
+
+}
+.thumbnail-heading{
+
+}
+.thumbnail-image{
+    width: 100px;
+    height: 100px;
+    background: url("https://resources.premierleague.pulselive.com/photo-resources/premierleague/photo/2025/04/19/4262df4a-af3b-4510-bd2c-38a5f1a3c22e/2210986636.jpg?width=1440");
+    background-position: center;
+    background-size: cover;
+}

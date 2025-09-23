@@ -1,0 +1,15 @@
+.step-analyser{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+.step{
+    width: 50%;
+    height: 5px;
+    border-radius: 2px;
+    background-color: #f2f2f2;
+    cursor: pointer ;
+}
+.active-step{
+    background-color: #007bff;
+}

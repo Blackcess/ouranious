@@ -1,0 +1,91 @@
+
+.news-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+
+  /* Make card fluid in parent container */
+  flex: 1 1 300px;
+  min-width: 260px;
+}
+
+.news-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+.news-thumbnail {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9; /* maintain consistent proportions */
+  object-fit: cover;
+}
+
+.news-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.news-title {
+  font-size: clamp(1rem, 2vw, 1.4rem); /* scales with screen */
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #222;
+  line-height: 1.3;
+}
+
+.news-description {
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
+  color: #666;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.news-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: auto;
+}
+
+/* Responsive */
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .news-card {
+    max-width: 100%;
+  }
+
+  .news-thumbnail {
+    aspect-ratio: 4 / 3; /* slightly taller for mobile */
+  }
+
+  .news-content {
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-title {
+    font-size: 1rem;
+  }
+
+  .news-description {
+    font-size: 0.85rem;
+  }
+
+  .news-meta {
+    font-size: 0.75rem;
+  }
+}

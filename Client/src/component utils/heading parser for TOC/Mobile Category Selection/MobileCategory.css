@@ -1,0 +1,53 @@
+/* Overall page styling */
+.category-page {
+  padding: 16px;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Page title */
+.category-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #333;
+}
+
+/* Grid container */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+/* Each category card */
+.category-card {
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover effects */
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* Link styling */
+.category-link {
+  text-decoration: none;
+  color: #0070f3;
+  font-weight: 500;
+  display: block;
+  word-break: break-word;
+}
+
+/* Smooth scrolling if content grows */
+html {
+  scroll-behavior: smooth;
+}

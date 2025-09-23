@@ -45,6 +45,7 @@ function PagesDisplay({value}){
 
     const myPages = ["Home","Categories","Innovation",'App Review',"About","Contact"]
     const myLinks = ["home","home","innovation","app-review","about","contact"]
+    const myMobileLinks = ["home","mobile/category","innovation","app-review","about","contact"]
     // const allCategories=["Tech","Business","Entertainment","Health","Science","Sports","World"]
     const [smallScreen,setSmallScreen] = useState(false)
     const [menuSelect,setMenuSelect] = useState(false)
@@ -56,7 +57,7 @@ function PagesDisplay({value}){
     },[value.screenData.screenWidth])
     useEffect(()=>{
         value.screenData.feedBack(menuSelect)
-        console.log("The Value Value is ",value)
+        // console.log("The Value Value is ",value)
     },[menuSelect])
 
     
@@ -151,7 +152,8 @@ function PagesDisplay({value}){
                     myPages.map((page,index)=>{
                         return <NavLink key={index*444} className={({isActive})=>{
                             return isActive ? "my-pages-list-li-active-mobile" : "my-pages-list-li-mobile"
-                        }} to={`${myLinks[index]}`}>{page}</NavLink>
+                        }} to={`${myMobileLinks[index]}`}
+                        onClick={()=>{setMenuSelect(false)}}>{page}</NavLink>
                     })
                 }
                 </ul>

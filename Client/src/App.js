@@ -16,8 +16,81 @@ import MyEditor from "./Content Management/In Browser Text Editor/OuraniousTextE
 import ArticleUpload from "./Content Management/Upload Page/UploadPage";
 import NewsCard from "./Content Management/Articles/NewsCard";
 import CategoryPage from "./Content Management/Category Inventory/CategoryTemplate";
-
+import MobileCategoryPage from "./component utils/heading parser for TOC/Mobile Category Selection/MobileCategory";
 function App() {
+
+  return (
+    <>
+    
+      <Routes>
+        <Route path="/" element={<RecquireAuth>Landing Page</RecquireAuth>}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/create_account" element={<CreateAccount/>}/>
+        <Route path="/create-account-done" element={<CreateAccountDone/>}/>
+        <Route path="/ourans-platform" element={<RecquireAuth><ParentComponent/></RecquireAuth>}>
+          <Route path="home" element={<RecquireAuth><Home/></RecquireAuth>}/>
+          <Route path="about" element={<RecquireAuth><About/></RecquireAuth>}/>
+          {/* <Route path="sample-article" element={<RecquireAuth><ThumbnailCard/></RecquireAuth>}/> */}
+          {/* <Route path="contact" element={<RecquireAuth><ArticleLayout /></RecquireAuth>}/> */}
+          <Route path="contact" element={<RecquireAuth><ArticleUpload/></RecquireAuth>}/>
+          <Route path="category" element={<CategoryPage/>}/>
+          <Route path="article/news" element={<ArticleLayout/>}/>
+          <Route path="mobile/category" element={<MobileCategoryPage/>}/>
+        </Route>
+      
+      </Routes>
+    
+    </>
+  );
+}
+
+
+
+export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //  const dummyContent = {
 //   title: "The Rise of AI Startups in 2025",
 //   author: "Thomas Anesu",
@@ -57,30 +130,3 @@ function App() {
   
 // "https://elements-resized.envatousercontent.com/envato-dam-assets-production/EVA/TRX/5d/0e/4d/1f/68/v1_E10/E1028W21.jpg?w=800&cf_fit=scale-down&mark-alpha=18&mark=https%3A%2F%2Felements-assets.envato.com%2Fstatic%2Fwatermark4.png&q=85&format=auto&s=aac5c205833748eca936d3110f7989032243975483e7716ce5f5492796818e32";
 
-  return (
-    <>
-    
-      <Routes>
-        <Route path="/" element={<RecquireAuth>Landing Page</RecquireAuth>}/>
-        <Route path="/login" element={<Login/>}/>
-        <Route path="/create_account" element={<CreateAccount/>}/>
-        <Route path="/create-account-done" element={<CreateAccountDone/>}/>
-        <Route path="/ourans-platform" element={<RecquireAuth><ParentComponent/></RecquireAuth>}>
-          <Route path="home" element={<RecquireAuth><Home/></RecquireAuth>}/>
-          <Route path="about" element={<RecquireAuth><About/></RecquireAuth>}/>
-          {/* <Route path="sample-article" element={<RecquireAuth><ThumbnailCard/></RecquireAuth>}/> */}
-          {/* <Route path="contact" element={<RecquireAuth><ArticleLayout /></RecquireAuth>}/> */}
-          <Route path="contact" element={<RecquireAuth><ArticleUpload/></RecquireAuth>}/>
-          <Route path="category" element={<CategoryPage/>}/>
-          <Route path="article/news" element={<ArticleLayout/>}/>
-        </Route>
-      
-      </Routes>
-    
-    </>
-  );
-}
-
-
-
-export default App;

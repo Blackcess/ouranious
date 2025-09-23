@@ -2,6 +2,7 @@ import "./Login.css"
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import styled from "styled-components";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function Login(){
@@ -47,7 +48,8 @@ function Login(){
     return (
         <div className="login-container">
             <form className="login-form" >
-                <div className="business-logo"></div>
+                {/* className="business-logo" */}
+                <StyledLogo ></StyledLogo>
                 <h2>Login</h2>
                 <div className="form-group">
                     <label htmlFor="email">Email:</label>
@@ -79,5 +81,18 @@ function Login(){
         </div>
     )
 }
+const StyledLogo = styled.div`
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1rem;
+    background: url(${"6145204199294618485 (1).jpg"});
+    background-position: center;
+    background-size: cover;
+    border-radius: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    
+`
+
 
 export default Login;

@@ -1,7 +1,10 @@
-import { useEffect,useState } from "react";
+import { createContext, useEffect,useState } from "react";
 import axios from "axios";
 import { useNavigate,useLocation } from "react-router-dom";
-
+import { checkAuthentication } from "./APIs/authenticationAPIs";
+import AuthContext from "./authContext";
+import SpinLoader from "../Util Components/SpinLoader/SpinLoader";
+import "./RecquireAuth.css"
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -10,38 +13,52 @@ function RecquireAuth({children}){
     const location = useLocation();
     const [loading,setLoading] = useState(true);
     const [authenticated,setAuthenticated] = useState(false);
-    useEffect(()=>{
-        const checkAuth = async()=>{
-            try {
-                const response = await axios.get(`${API_BASE_URL}/test`,{withCredentials:true});
-                console.log("Here is my response",response)
-                if(response.data.status){
-                    console.log("User is Authenticated")
-                    setAuthenticated(true);
-                    // allow the user to access the protected route
-                }
-                else{
-                    setAuthenticated(false);
-                }
-            } catch (error) {
-                console.error("Error in authentication:..",error);
-                setAuthenticated(false);
-            }
-            finally{
-                setLoading(false);
-            }
+    const [user,setUser] = useState(null)
+    useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const response = await checkAuthentication()
+        if (response.status) {
+          setAuthenticated(true);
+          setUser(response.user ?? null); // if backend sends user
+        } else {
+          setAuthenticated(false);
+          setUser(null);
         }
-        checkAuth();
-    },[])
+      } catch (err) {
+        console.error("Auth init failed:", err);
+        setAuthenticated(false);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if(loading){
-        return <div>Loading...</div>
-    }
-    if(!authenticated){
-        navigate("/login",{state:{from:location},replace:true})
-        return null;
-    }
+    initAuth();
+  }, []);
 
-    return children;
+    const value = {
+    authenticated,
+    loading,
+    user,
+    setAuthenticated, // useful for login/logout
+    setUser,
+  };
+
+  if(loading){
+    return <div className="checking-authentication">
+        <div className="c-a-template">
+          <span>Ouranious Is  Checking Authentication...</span>
+          <span><SpinLoader/></span>
+        </div>
+    </div>
+  }
+
+  return (
+      <AuthContext.Provider value={value}>
+          {children}
+      </AuthContext.Provider>
+  );
 }
+
 export default RecquireAuth;

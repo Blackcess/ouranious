@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react"
 import "./Navigation.css"
-import { ScreenData } from "../Parent Page/ParentComponent"
+import { ScreenData } from "../Parent Page/ParentComponent";
 import styled from "styled-components"
 import { CiMenuBurger } from "react-icons/ci";
 import { IoMdClose } from "react-icons/io";
@@ -21,18 +21,21 @@ function Navigation(){
     
     
     return <>
-    <section className="nav-template">
-        <div className={`brand-details ${smallScreen ? "mobile" : ""}`}>
-            <div className="brand-logo"></div>
-            {(!smallScreen) && <div className="nav-mission">
-                <h4>News Online</h4>
-            </div>}
-        </div>
-        
-        <div className="module-pages"> 
-            <PagesDisplay value={{screenData}}/>
-        </div>
-    </section>
+    
+        <section className="nav-template">
+            <div className={`brand-details ${smallScreen ? "mobile" : ""}`}>
+                <div className="brand-logo"></div>
+                {(!smallScreen) && <div className="nav-mission">
+                    <h4>News Online</h4>
+                </div>}
+            </div>
+            
+            <div className="module-pages"> 
+                <PagesDisplay value={{screenData}}/>
+            </div>
+        </section>
+    
+    
     </>
 }
 
@@ -75,7 +78,7 @@ function PagesDisplay({value}){
                 console.log("Categories are: ",res.data);
                 setAllCategories(res.data.data)
                 setCategoriesLoaded(true)
-            }
+            } 
 
         } catch (error) {
             console.error(error )
@@ -106,7 +109,7 @@ function PagesDisplay({value}){
             onMouseEnter={() => isCategories && setShowCategories(true)}
             onMouseLeave={() => isCategories && setShowCategories(false)}
           >
-            <NavLink 
+            <NavLink     
               className={({ isActive }) => 
                 isCategories ? "categories-nav-link" : isActive ? "my-pages-list-li-active" : "my-pages-list-li"
               } 

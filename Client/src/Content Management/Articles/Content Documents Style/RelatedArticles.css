@@ -1,0 +1,36 @@
+/* RelatedArticles.css */
+
+.related-articles {
+  /* margin-top: 4rem; */
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
+  margin-bottom:10px ;
+}
+
+.related-articles__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-left: 10px;
+}
+
+.related-articles__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+@media (min-width: 768px) {
+  .related-articles__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .related-articles__list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.related-articles .article-card {
+  background: transparent;
+  box-shadow: none;
+}

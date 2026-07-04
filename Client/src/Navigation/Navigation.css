@@ -1,23 +1,21 @@
+
 .nav-template{
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    padding: 15px 20px;
-    color: #fff;
-    background: #333;
-    position: fixed;
-    z-index: 1000; 
-    top: 0;
-    left: 0; 
+    /* padding: 15px 20px; */
+    color: black;
+    /* background: #333; */
     transition: transform 0.3s ease;
-    width: 100vw;       /* exact viewport width */
+    width: 100%;       /* exact viewport width */
+    max-width: 1200px;
     box-sizing: border-box; /* include padding in width */
 
 }
 .brand-logo{
-    height: 80px;
-    width: 80px;
+    height: 40px;
+    width: 40px;
     background: url("6145204199294618485 (1).jpg");
     background-position: center;
     background-size: cover;
@@ -32,7 +30,7 @@
 .my-pages-list-li{
     list-style-type: none;
     text-decoration: none;
-    color: #fff;
+    color: black;
     cursor: pointer;
 }
 .my-pages-list-li-active{
@@ -120,7 +118,7 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    color: #fff;
+    color: black;
     text-decoration: none;
 }
 

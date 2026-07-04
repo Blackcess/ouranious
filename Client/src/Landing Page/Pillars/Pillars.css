@@ -1,0 +1,58 @@
+/* ========================= */
+/* PILLARS SECTION           */
+/* ========================= */
+
+.pillars-section {
+  padding: 80px 0;
+  /* background: #f9fafb; */
+}
+
+/* GRID */
+.pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+/* CARD */
+.pillar-card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  border: 1px solid var(--color-border);
+  text-align: center;
+  transition: 0.25s ease;
+}
+
+.pillar-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+/* ICON */
+.pillar-icon {
+  font-size: 32px;
+  margin-bottom: 14px;
+}
+
+/* TEXT */
+.pillar-card h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.pillar-card p {
+  font-size: 14px;
+  color: var(--color-text-sub);
+  line-height: 1.5;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .pillars-grid {
+    grid-template-columns: 1fr;
+  }
+  .pillar-card {
+    padding: 20px;
+  }
+}

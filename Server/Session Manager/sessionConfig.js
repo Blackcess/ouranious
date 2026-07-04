@@ -16,7 +16,10 @@ export const sessionMiddleware = session({
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
-    cookie:{
-        maxAge: 1000 * 60 * 60 * 24 * 30 // 30 days
-    }
+    cookie: {
+    httpOnly: true,            // not accessible via JS
+    secure: false,             // must be false for HTTP (LAN/testing)
+    sameSite: "lax",           // allows cross-origin requests from your LAN/dev frontend
+    maxAge: 24 * 60 * 60 * 1000 // optional: cookie expires in 1 day
+  }
 });

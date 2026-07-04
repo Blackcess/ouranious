@@ -1,0 +1,20 @@
+.loading-tem{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+
+}
+.loading-tem p{
+    color: rgb(27, 27, 216);
+    text-decoration: underline;
+    cursor: pointer;
+}
+.published-articles-template{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

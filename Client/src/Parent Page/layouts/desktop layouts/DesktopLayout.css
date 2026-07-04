@@ -1,0 +1,20 @@
+
+.desktop-main-area{
+    position: absolute;
+    width: 100dvw;
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: 60px 1fr;
+    overflow: hidden;
+    position: relative;
+    font-size: 14px;
+}
+
+.main-outlet{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    overflow-y: auto;
+
+}
+

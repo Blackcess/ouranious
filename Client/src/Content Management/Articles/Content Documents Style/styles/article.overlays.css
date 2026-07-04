@@ -1,0 +1,16 @@
+.block--admin {
+  outline: 1px dashed rgba(255, 0, 0, 0.3);
+  position: relative;
+  padding: 0.25rem;
+}
+
+.block--admin::before {
+  content: attr(data-block-type);
+  position: absolute;
+  top: -0.75rem;
+  left: 0;
+  font-size: 0.65rem;
+  color: #a00;
+  background: #fff;
+  padding: 0 0.25rem;
+}

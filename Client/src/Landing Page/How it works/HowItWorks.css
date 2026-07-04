@@ -1,0 +1,58 @@
+/* ========================= */
+/* HOW IT WORKS SECTION      */
+/* ========================= */
+
+.how-section {
+  padding: 80px 0;
+  /* background: #f9fafb; */
+}
+
+/* GRID */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 40px;
+}
+
+/* CARD */
+.step-card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  border: 1px solid var(--color-border);
+  transition: 0.25s ease;
+}
+
+.step-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+/* NUMBER */
+.step-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 12px;
+}
+
+/* TEXT */
+.step-card h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.step-card p {
+  font-size: 14px;
+  color: var(--color-text-sub);
+  line-height: 1.5;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+}

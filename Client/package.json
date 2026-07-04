@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@fortawesome/free-brands-svg-icons": "^7.0.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.7.0",
     "@testing-library/react": "^16.3.0",
@@ -11,19 +12,24 @@
     "@tiptap/react": "^3.4.2",
     "@tiptap/starter-kit": "^3.4.2",
     "axios": "^1.11.0",
+    "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.13",
     "gsap": "^3.13.0",
     "quill": "^2.0.3",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "quill-image-drop-module": "^1.0.3",
+    "quill-image-resize-module-react": "^3.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",
+    "react-quill": "^2.0.0",
     "react-router-dom": "^7.8.2",
     "react-scripts": "5.0.1",
+    "react-toastify": "^11.1.0",
     "styled-components": "^6.1.19",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "cross-env HOST=0.0.0.0 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -48,6 +54,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "cross-env": "^10.0.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.13"
   }

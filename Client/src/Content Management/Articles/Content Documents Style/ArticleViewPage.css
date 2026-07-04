@@ -1,0 +1,26 @@
+.view-page-temp{
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    max-width: 1200px;
+     /* Hide scrollbar for Firefox */
+  scrollbar-width: none;
+
+  /* Hide scrollbar for IE/Edge (legacy) */
+  -ms-overflow-style: none;
+    /* justify-content: center; */
+    /* overflow-x: hidden; */
+}
+/* Hide scrollbar for Chrome, Safari, Opera */
+.vie::-webkit-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width : 700px) {
+    .view-page-temp{
+        /* font-size: 14px; */
+    }
+}

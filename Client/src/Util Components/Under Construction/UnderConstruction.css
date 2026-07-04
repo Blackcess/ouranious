@@ -1,0 +1,51 @@
+.construction-template{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* height: 100px; */
+    position: relative;
+    /* background-color: teal; */
+    /* padding: 20px; */
+    
+    
+}
+.under-construction-image-banner{
+    height: 300px;
+    width: 300px;
+    background-image: url("http://localhost:8000/assets/subject default images/construction-road-repair-yellow-black-barrier-sign-realistic-vector-illustration/2307.i518.020.F.m005.c9.construction.jpg");
+    background-position: center;
+    background-size: cover;
+    /* background-color: red; */
+}
+.construction-body{
+    /* position:absolute ; */
+    /* text-decoration: underline; */
+    /* cursor: pointer; */
+    /* background-color: #fff; */
+}
+.construction-alert-poster{
+    /* font-size: 1.5rem; */
+    /* font-weight: bold; */
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.construction-alert-text{
+    font-weight: 600;
+    font-size: 16px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* background-color: red; */
+}
+@media (max-width:700px) {
+    .under-construction-image-banner{
+        height: 200px;
+        width: 200px;
+    }
+    .construction-alert-text{
+        font-weight: 300;
+    }
+}

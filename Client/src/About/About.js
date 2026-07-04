@@ -3,7 +3,7 @@ import "./About.css"
 function About(){
 
     return <>
-    <section>
+    <section className="about-template">
         This is the about section
     </section>
     </>

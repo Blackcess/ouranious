@@ -1,0 +1,47 @@
+/* ========= ROOT DESIGN TOKENS ========= */
+:root {
+  --color-primary: #f97316;        /* orange */
+  --color-primary-hover: #ea580c;
+  --color-text-main: #111827;      /* near black */
+  --color-text-sub: #4b5563;       /* gray */
+  --color-bg: #ffffff;
+  --color-border: #e5e7eb;
+}
+
+/* ========= GLOBAL RESET ========= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text-main);
+} */
+
+/* ========= CONTAINER ========= */
+
+
+/* ========= NAVBAR ========= */
+.landing-page-wrapper{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

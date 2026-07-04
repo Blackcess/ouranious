@@ -1,38 +1,49 @@
 import { connection } from "../Database Connection/databaseConnect.js";
+import { DomainError } from "../../Domain Errors/domainErrors.js";
+import bycrpt from "bcrypt";
 
 const checkByUserName = async (username)=>{
     
     try {
-       const [row]=await connection.query(`SELECT * FROM users WHERE name = ?`,[username]);
+       const [row]=await connection.query(`SELECT * FROM users WHERE username = ?`,[username]);
        if(!row.length){
-        throw new Error("User Not Found")
+        throw DomainError.notFound("User Not Found")
        } 
        return row;
     } catch (error) {
         console.error("error: ",error)
-        throw new Error("User not Found")
+        throw error;
     }
 }
+const checkByEmail = async (email)=>{
+    const [row]=await connection.query(`SELECT * FROM users WHERE email = ?`,[email]);
+    if(!row.length){
+     throw DomainError.notFound("User Not Found")
+    }
+    return row;
+}
 
-const createTraditionalAccount= async (username,password,account_type)=>{
+const createTraditionalAccount= async (email,password,username,account_type)=>{
     try {
-        if(!(username && password)){
-            throw new Error("Invalid Credentials")
+        if(!(email && password && username)){
+            throw DomainError.invalid("Invalid Credentials")
         }
-        const [search_result] = await connection.query(`SELECT * FROM users WHERE name = ?`,[username]);
+        const [search_result] = await connection.query(`SELECT * FROM users WHERE email = ?`,[email]);
         if(search_result.length){
-            throw new Error ("user with this username already exists")
+            throw DomainError.invalid("user with this email already exists")
         }
-        const [{affectedRows,insertId}]=await connection.query(`INSERT INTO users (create_time,name,password,account_type)
-                                VALUES(NOW(),?,?,?)`,[username,password,account_type]);
+        const hashedPassword = await bycrpt.hash(password,10);
+        
+        const [{affectedRows,insertId}]=await connection.query(`INSERT INTO users (create_time,email,password,account_type,username)
+                                VALUES(NOW(),?,?,?,?)`,[email,hashedPassword,account_type,username]);
         if(!affectedRows){
-            throw new Error("Error Inserting new user")
+            throw DomainError.invalid("Error Inserting new user")
         }
         console.log("User Inserted Successsfully");
         return true
     } catch (error) {
         console.error(error);
-        throw new Error(error);
+        throw error;
     }
 }
 

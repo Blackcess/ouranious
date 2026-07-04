@@ -1,0 +1,21 @@
+.comments-section{
+    /* background-color: teal; */
+    border-top: 1px solid gray;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.comment-icon{
+    display: flex;
+    align-items: center;
+    color: rgb(28, 91, 238);
+}
+.comment-tag{
+    display: flex;
+    align-items: center;
+}
+.comments-title{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

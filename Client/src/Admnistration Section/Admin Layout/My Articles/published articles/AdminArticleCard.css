@@ -1,0 +1,36 @@
+.admin-type-card{
+    border: 0.5px solid rgb(185, 183, 183);
+    display: flex;
+    padding: 12px 10px;
+
+}
+.admin-card-details{
+    flex:3;
+    display: flex;
+    gap: 12px;
+
+    text-decoration: none;
+    color: inherit;
+
+    border-bottom: 1px solid #eee;
+
+    align-items: flex-start; /* 👈 critical */
+}
+
+.article-admin-prev{
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+.admin-icon{
+    cursor: pointer;
+}
+.admin-icon:hover{
+    color: rgb(87, 88, 88);
+}
+.read-me-tag{
+    color: rgb(3, 139, 33);
+    cursor: pointer;
+}

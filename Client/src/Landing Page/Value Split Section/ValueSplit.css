@@ -1,0 +1,75 @@
+/* ========================= */
+/* VALUE SPLIT SECTION       */
+/* ========================= */
+
+.value-section {
+  padding: 80px 0;
+  background: white;
+}
+
+.value-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+/* CARD */
+.value-card {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 30px;
+  transition: 0.25s ease;
+}
+
+.value-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.value-card h3 {
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+/* LIST */
+.value-card ul {
+  margin-bottom: 20px;
+  padding-left: 18px;
+}
+
+.value-card li {
+  list-style-type: none;
+  margin-bottom: 8px;
+  color: var(--color-text-sub);
+}
+
+/* BUTTON ALIGNMENT */
+.value-card .btn-primary,
+.value-card .btn-secondary {
+  display: inline-block;
+  margin-top: 10px;
+}
+.capability-list-landing{
+    display: flex;
+    gap: 8px;
+}
+.check-icon{
+    color: rgb(1, 127, 185);
+}
+.cap-li{
+    display: flex;
+    align-items: center;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .value-grid {
+    grid-template-columns: 1fr;
+  }
+  .value-card{
+    padding: 20px 10px;
+  }
+  .value-section{
+    padding: 15px 0px;
+  }
+}

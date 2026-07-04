@@ -1,0 +1,92 @@
+.onboarding-page {
+    min-height: 100vh;
+    background-color: #f2f2f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+.onboarding-card {
+    width: 100%;
+    max-width: 520px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 32px 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.onboarding-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.onboarding-header p {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.progress-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin: 24px 0;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+}
+
+.step-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* active step */
+.step-item.active .step-circle {
+    background: #3b82f6;
+    color: white;
+}
+
+/* completed step */
+.step-item.completed .step-circle {
+    background: #10b981;
+    color: white;
+}
+
+.error-banner {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+}
+
+.step-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+@media (max-width: 500px) {
+    .onboarding-page{
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+    }
+}

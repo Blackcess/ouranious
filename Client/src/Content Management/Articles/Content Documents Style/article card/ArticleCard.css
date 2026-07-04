@@ -1,0 +1,70 @@
+
+.article-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px 10px;
+
+  text-decoration: none;
+  color: inherit;
+
+  border-bottom: 1px solid #eee;
+
+  align-items: flex-start; /* 👈 critical */
+
+  cursor: pointer;
+}
+
+.article-card-thumb {
+  flex-shrink: 0;
+
+  width: 80px;
+  height: 80px;
+
+  border-radius: 8px;
+  overflow: hidden;
+
+  background: #f3f3f3; /* fallback tone */
+}
+
+.article-card-thumb img,
+.article-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 👈 key line */
+
+  display: block;
+}
+
+article-card-body {
+  flex: 1;
+  min-width: 0; /* 👈 prevents overflow bugs */
+}
+
+.article-card-title {
+  margin: 0 0 6px;
+
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.article-card-date {
+  font-size: 0.75rem;
+  color: #777;
+}
+.article-card-category{
+  color: crimson;
+  width: fit-content;
+  padding: 10px 0px;
+
+}
+@media (hover: hover) {
+  .article-card:hover {
+    background: #fafafa;
+  }
+}

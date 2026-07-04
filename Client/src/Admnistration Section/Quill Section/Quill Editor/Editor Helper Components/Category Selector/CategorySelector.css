@@ -1,0 +1,21 @@
+.category-select {
+  max-width: 320px;
+  /* margin-bottom: 12px; */
+}
+
+.category-select label {
+  font-size: 0.85rem;
+  color: #666;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.category-select select {
+  width: 100%;
+  /* padding: 8px; */
+  /* font-size: 0.95rem; */
+}
+
+.required {
+  color: #d00;
+}

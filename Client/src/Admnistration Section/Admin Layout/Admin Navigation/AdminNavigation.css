@@ -1,0 +1,25 @@
+.admin-nav{
+    width: 100%;
+    /* background-color: teal; */
+    display: flex;
+    padding: 10px 0px;
+
+}
+
+.admin-nav ul{
+    width: 100%;
+    display: flex;
+    justify-content: end;
+
+}
+.admin-nav ul li{
+    list-style: none;
+    
+    
+}
+.admin-nav-linjks{
+    color: black;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}

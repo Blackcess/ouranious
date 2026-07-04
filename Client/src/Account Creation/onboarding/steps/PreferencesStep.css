@@ -1,0 +1,74 @@
+.preferences-step {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.preferences-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.preferences-header p {
+    margin-top: 6px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+.preferences-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+}
+.form-group input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+
+.form-group input:disabled {
+    background: #f9fafb;
+    cursor: not-allowed;
+}
+.preferences-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.preferences-actions {
+    display: flex;
+    gap: 10px;
+}
+.ghost-btn {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.ghost-btn:hover:not(:disabled) {
+    color: #111827;
+    text-decoration: underline;
+}

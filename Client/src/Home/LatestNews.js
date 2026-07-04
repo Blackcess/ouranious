@@ -1,1 +1,0 @@
-import "./LatestNews.css"

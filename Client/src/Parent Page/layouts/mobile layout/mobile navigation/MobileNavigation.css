@@ -1,0 +1,19 @@
+.mob-na-temp{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    border-top: 1px solid rgba(78, 78, 78, 0.181);
+    box-sizing: border-box;
+    padding: 15px;
+    align-items: center;
+    font-size: 12px;
+    /* background-color: green; */
+}
+.nav-entity-mob-na{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: rgb(14, 14, 15);
+    text-decoration: none;
+    justify-content: center;
+}

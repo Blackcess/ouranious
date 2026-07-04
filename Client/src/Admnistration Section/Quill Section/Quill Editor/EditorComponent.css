@@ -1,0 +1,91 @@
+.ql-insertMedia::before {
+  /* content: "🖼️"; */
+  font-size: 16px;
+}
+
+.ql-media {
+  border: 1px dashed #ccc;
+  padding: 12px;
+  margin: 12px 0;
+  background: #fafafa;
+}
+
+.ql-media-placeholder {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  pointer-events: none;
+}
+
+
+/* editor styling */
+
+.ql-editor {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+
+  font-size: 14px;
+  line-height: 1.7;
+  color: #1f2937; 
+
+  padding: 15px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ql-editor p {
+  margin: 0 0 1.2em 0;
+}
+
+.ql-editor h2 {
+  font-size: 1.5rem;
+  margin: 2em 0 0.8em;
+  font-weight: 600;
+}
+
+.ql-editor blockquote {
+  margin: 1.5em 0;
+  padding-left: 1em;
+  border-left: 3px solid #e5e7eb;
+  /* color: #4b5563; */
+}
+
+/* toolbar styling */
+#custom-toolbar {
+  position: sticky;
+  top: 0;
+  /* z-index: 10; */
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+  
+}
+
+/* Editor wrapper styling */
+.editor-wrapper {
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgb(134, 134, 134);
+  /* background-color: red; */
+  /* border-radius: 8px; */
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.editor-wrapper input[type="text"] {
+  width: 100%;
+  padding: 16px 5px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  /* outline: none; */
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.editor-wrapper input::placeholder {
+  color: #9ca3af;
+}

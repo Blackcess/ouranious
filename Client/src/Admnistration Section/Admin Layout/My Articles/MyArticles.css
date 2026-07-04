@@ -1,0 +1,29 @@
+.my-articles-section{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    height: 100%;
+
+}
+.my-artixles-header{
+    color: rgb(54, 54, 54);
+    
+}
+
+.my-articles-nav ul{
+    display: flex;
+    justify-content: start;
+}
+
+.my-articles-nav ul li{
+    display: flex;
+    list-style: none;
+    text-decoration: none;
+    gap: 15px;
+
+}
+.my-articles-nabvlinks{
+    color: rgb(54, 54, 54);
+    text-decoration: none;
+}

@@ -1,0 +1,101 @@
+.media-picker {
+  display: flex;
+  flex-direction: column;
+
+  padding: 20px;
+  gap: 16px;
+  position: relative;
+
+  background: #ffffff;
+  color: #111827;
+}
+.media-picker h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-picker-tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  cursor: pointer;
+  color: #0545c5;
+}
+
+.close-picker-tag:hover {
+  color: #111827;
+}
+.media-picker input[type="file"] {
+  font-size: 14px;
+}
+
+.media-picker input[type="file"]:disabled {
+  opacity: 0.6;
+}
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.media-grid button {
+  position: relative;
+  aspect-ratio: 1 / 1;
+
+  border: none;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+
+  background: #f3f4f6;
+  cursor: pointer;
+}
+
+.media-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  display: block;
+}
+
+.media-grid button::after {
+  content: "Insert";
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.media-grid button:hover::after {
+  opacity: 1;
+}
+
+.media-picker > button:last-of-type {
+  align-self: flex-end;
+
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: #6b7280;
+
+  cursor: pointer;
+}
+
+.media-picker > button:last-of-type:hover {
+  color: #111827;
+}

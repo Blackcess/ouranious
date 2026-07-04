@@ -1,0 +1,16 @@
+.no-item-found-template{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    position: relative;
+}
+.no-items-image{
+    position:absolute ;
+    text-decoration: underline;
+   /* height: 100px;
+   width: 100px;
+   background: url("https://www.gstatic.com/youtube/img/creator/no_content_illustration_v4.svg"); */
+   background-position: center;
+   background-size: cover;
+}

@@ -20,6 +20,6 @@ export const sessionMiddleware = session({
     httpOnly: true,            // not accessible via JS
     secure: false,             // must be false for HTTP (LAN/testing)
     sameSite: "lax",           // allows cross-origin requests from your LAN/dev frontend
-    maxAge: 24 * 60 * 60 * 1000 // optional: cookie expires in 1 day
+    maxAge: 30 * 24 * 60 * 60 * 1000 // optional: cookie expires in 30 days
   }
 });

@@ -1,3 +1,13 @@
+.quill {
+    display: flex;
+    flex-direction: column;
+}
+
+.ql-container {
+    flex: 1;
+    /* padding: 80px 0px; */
+}
+
 .ql-insertMedia::before {
   /* content: "🖼️"; */
   font-size: 16px;
@@ -17,7 +27,6 @@
   pointer-events: none;
 }
 
-
 /* editor styling */
 
 .ql-editor {
@@ -29,9 +38,10 @@
   color: #1f2937; 
 
   padding: 15px;
-  width: 100%;
+  /* width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0 auto; */
+  width:auto;
 }
 
 .ql-editor p {
@@ -55,13 +65,14 @@
 #custom-toolbar {
   position: sticky;
   top: 0;
-  /* z-index: 10; */
+  z-index: 100;
   display: flex;
   gap: 8px;
   align-items: center;
   padding: 8px 12px;
   border-bottom: 1px solid #e5e7eb;
-  background: #ffffff;
+  background: #1f1e1e;
+  color:white;
   
 }
 
@@ -69,11 +80,11 @@
 .editor-wrapper {
   width: 100%;
   height: 100%;
-  border: 1px solid rgb(134, 134, 134);
-  /* background-color: red; */
-  /* border-radius: 8px; */
+  /* border: 1px solid rgb(134, 134, 134); */
   overflow: hidden;
-  background: #ffffff;
+  background: #f3f2f2;
+  margin-bottom: 10px;
+  /* border: 20px solid red !important; */
 }
 
 .editor-wrapper input[type="text"] {

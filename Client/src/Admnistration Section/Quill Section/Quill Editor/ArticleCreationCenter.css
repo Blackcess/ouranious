@@ -6,8 +6,11 @@
     position: relative;
     max-width: 1200px;
     padding: 10px;
-    overflow: hidden;
+    overflow: auto;
     /* background-color: crimson; */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 .loading-editor-template{
   width: 100%;
@@ -19,10 +22,6 @@
 }
 
 .editor-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  font-size: 12px;
 
   display: flex;
   justify-content: space-between;
@@ -31,33 +30,31 @@
 
   padding: 12px;
   background: #ffffff;
-  /* background-color: teal; */
-  /* border-bottom: 1px solid #e5e7eb; */
   border: 1px solid black;
-  border-bottom: none;
 
-}
-
-.editor-toolbar button {
-  background: transparent;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 6px ;
-  /* font-size: 14px; */
-  cursor: pointer;
 }
 
 .editor-toolbar-desktop {
-  padding: 10px;
+  font-size: 14px;
   display: flex;
-  /* border: 1px solid black; */
   width: 100%;
 }
+
 .editor-toolbar-mobile {
   display: none;
 }
 
-
+.editor-toolbar-desktop button,
+.editor-toolbar-right button {
+  
+  background: #1f1e1e;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px ;
+  font-size: 12px;
+  cursor: pointer;
+  color: white;
+}
 
 .editor-toolbar-left{
   display: flex;
@@ -77,7 +74,7 @@
 
 
 .editor-main {
-  height: 100%;
+  /* height: 100%; */
   width: 100%;
   display: flex;
   justify-content: center;
@@ -152,20 +149,7 @@
   gap: 6px;
   margin-left: 12px;
 }
-.thumbnail-action {
-  background: transparent;
-  border: 1px dashed #d1d5db;
-  border-radius: 6px;
-  padding: 4px 8px;
 
-  font-size: 13px;
-  color: #374151;
-  cursor: pointer;
-}
-
-.thumbnail-action:hover {
-  background: #f3f4f6;
-}
 .thumbnail-status {
   font-size: 12px;
   color: #16a34a; /* subtle green */

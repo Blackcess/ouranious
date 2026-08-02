@@ -1,4 +1,4 @@
-import "./EditorComponent.css";
+import "./EditorComponentTest.css";
 import React, { useEffect, useMemo, useRef } from "react";
 // import Quill from "quill";
 import MediaBlot from "./blots/media blots/MediaBlot";
@@ -64,7 +64,10 @@ export const EditorComponent= forwardRef(({
 
       <div id="custom-toolbar">
         <select className="ql-header" defaultValue="">
+          <option value="1">Heading 1</option>
           <option value="2">Heading 2</option>
+          <option value="3">Heading 3</option>
+          <option value="4">Heading 4</option>
           <option value="">Normal</option>
         </select>
         <button className="ql-bold" />
@@ -74,11 +77,6 @@ export const EditorComponent= forwardRef(({
         <button className="ql-insertMedia"><IoImagesOutline/></button>
       </div>
 
-      {/* <button 
-        onClick={openMediaPicker}
-      > */}
-
-     
       <ReactQuill
         key={contentId}
         ref={quillRef}
@@ -88,7 +86,7 @@ export const EditorComponent= forwardRef(({
         }}
         modules={modules}
         formats={formats}
-        style={{ height: "100%", }}
+        
       />
       
     </div>

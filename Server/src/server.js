@@ -23,7 +23,6 @@ app.set("trust proxy", 1)
 const allowedOrigins = [
   process.env.LOCALHOST_CLIENT_URL,       // React dev server on your computer   // LAN/Wi-Fi IP for your phone
 ];
-// console.log("My hosts are ",allowedOrigins)
 
 
 app.use(cors({

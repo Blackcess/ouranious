@@ -1,0 +1,5 @@
+# Merge this section into %USERPROFILE%\.codex\config.toml.
+# Update the paths to your actual Python executable and server.py.
+[mcp_servers.ouranious_mysql]
+command = "C:\\Users\\Thomas\\Documents\\Ouranious Project\\Knowledge Base\\.venv\\Scripts\\python.exe"
+args = ["C:\\Users\\Thomas\\Documents\\Ouranious Project\\Knowledge Base\\developer_tools\\mysql_mcp\\server.py"]

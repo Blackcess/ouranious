@@ -96,6 +96,10 @@ const AppNavigation = ({authenticated})=>{
                 title:"Community",
                 link:"/community"
             },
+            {
+                title:"Provenance",
+                link:"/provenance"
+            },
         )
     }
     return <>

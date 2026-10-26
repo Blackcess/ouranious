@@ -45,7 +45,6 @@ def get_relationship_resolution_service() -> RelationshipResolutionService:
 
     return RelationshipResolutionService(
         relationship_repository=relationship_repository,
-        database_manager=DatabaseManager(),
         identity_resolver=identity_resolver,
         require_persisted_endpoints=True,
     )

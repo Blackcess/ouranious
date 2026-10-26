@@ -1,5 +1,7 @@
 """Application service for type-aware relationship duplicate resolution."""
 
+from pymysql.connections import Connection
+
 from application.resolution.relationship.canonicalization import (
     canonicalize_relationship_properties,
     compare_canonical_properties,
@@ -15,22 +17,20 @@ from application.resolution.relationship.contracts import (
 from application.services.identity_resolver import IdentityResolver
 from domain_models.Identity_model.identity import Identity
 from domain_models.relationship_models.relationship import Relationship
-from infrastructure.database.connection import DatabaseManager
 from repositories.relationship_repository import RelationshipRepository
 
 
 class RelationshipEndpointNotFoundError(LookupError):
-    """Raised when persisted endpoint validation cannot resolve a reference."""
+    """Raised when endpoint references are missing or resolve to another kind."""
 
 
 class RelationshipResolutionService:
-    """Finds equivalent relationships without merging or mutating records."""
+    """Find equivalent relationships using the caller's transaction."""
 
     def __init__(
         self,
         *,
         relationship_repository: RelationshipRepository,
-        database_manager: DatabaseManager,
         identity_resolver: IdentityResolver | None = None,
         require_persisted_endpoints: bool = False,
     ):
@@ -41,13 +41,14 @@ class RelationshipResolutionService:
                 "identity_resolver is required when persisted endpoint checks are enabled"
             )
         self._relationship_repository = relationship_repository
-        self._database_manager = database_manager
         self._identity_resolver = identity_resolver
         self._require_persisted_endpoints = require_persisted_endpoints
 
     def resolve(
         self,
         request: RelationshipResolutionRequest,
+        *,
+        connection: Connection,
     ) -> RelationshipResolutionResult:
         if not isinstance(request, RelationshipResolutionRequest):
             raise TypeError("request must be a RelationshipResolutionRequest")
@@ -56,67 +57,63 @@ class RelationshipResolutionService:
         if not isinstance(relationship, Relationship):
             raise TypeError("request must contain a Relationship instance")
 
-        # Relationship construction already validates registered type, endpoint
-        # kinds, and the typed property model. This optional check validates the
-        # separate persistence invariant without duplicating domain validation.
         if self._require_persisted_endpoints:
-            self._validate_persisted_endpoints(relationship)
-
-        requested_properties = canonicalize_relationship_properties(relationship)
-        with self._database_manager.connection() as connection:
-            candidate_page = self._relationship_repository.find_candidates(
-                source_reference=relationship.get_source().reference,
-                target_reference=relationship.get_target().reference,
-                relationship_type=relationship.get_type(),
-                limit=request.candidate_limit,
+            self._validate_persisted_endpoints(
+                relationship,
                 connection=connection,
             )
 
-            matches: list[RelationshipCandidateMatch] = []
-            exact_matches = 0
-            possible_matches = 0
+        requested_properties = canonicalize_relationship_properties(relationship)
+        candidate_page = self._relationship_repository.find_candidates(
+            source_reference=relationship.get_source().reference,
+            target_reference=relationship.get_target().reference,
+            relationship_type=relationship.get_type(),
+            limit=request.candidate_limit,
+            connection=connection,
+        )
 
-            for candidate in candidate_page.items:
-                if not self._same_base_key(relationship, candidate):
-                    continue
-                candidate_properties = canonicalize_relationship_properties(
-                    candidate
-                )
-                has_conflict, missing_paths = compare_canonical_properties(
-                    requested_properties,
-                    candidate_properties,
-                )
-                if has_conflict:
-                    # Populated, conflicting values preserve separate events or
-                    # states; they are not duplicates merely because endpoints match.
-                    continue
-                if missing_paths:
-                    possible_matches += 1
-                    matches.append(
-                        RelationshipCandidateMatch(
-                            relationship=candidate,
-                            evidence=(
-                                RelationshipMatchEvidence(
-                                    kind=(
-                                        RelationshipMatchEvidenceKind.OPTIONAL_PROPERTIES_MISSING
-                                    ),
-                                    property_paths=missing_paths,
+        matches: list[RelationshipCandidateMatch] = []
+        exact_matches = 0
+        possible_matches = 0
+
+        for candidate in candidate_page.items:
+            if not self._same_base_key(relationship, candidate):
+                continue
+            candidate_properties = canonicalize_relationship_properties(candidate)
+            has_conflict, missing_paths = compare_canonical_properties(
+                requested_properties,
+                candidate_properties,
+            )
+            if has_conflict:
+                # Populated conflicts preserve separate events or states.
+                continue
+            if missing_paths:
+                possible_matches += 1
+                matches.append(
+                    RelationshipCandidateMatch(
+                        relationship=candidate,
+                        evidence=(
+                            RelationshipMatchEvidence(
+                                kind=(
+                                    RelationshipMatchEvidenceKind.OPTIONAL_PROPERTIES_MISSING
                                 ),
+                                property_paths=missing_paths,
                             ),
-                        )
+                        ),
                     )
-                else:
-                    exact_matches += 1
-                    matches.append(
-                        RelationshipCandidateMatch(
-                            relationship=candidate,
-                            evidence=(
-                                RelationshipMatchEvidence(
-                                    kind=RelationshipMatchEvidenceKind.PROPERTIES_EQUAL,
-                                ),
+                )
+            else:
+                exact_matches += 1
+                matches.append(
+                    RelationshipCandidateMatch(
+                        relationship=candidate,
+                        evidence=(
+                            RelationshipMatchEvidence(
+                                kind=RelationshipMatchEvidenceKind.PROPERTIES_EQUAL,
                             ),
-                        )
+                        ),
                     )
+                )
 
         if (
             exact_matches == 1
@@ -143,16 +140,19 @@ class RelationshipResolutionService:
     def _validate_persisted_endpoints(
         self,
         relationship: Relationship,
+        *,
+        connection: Connection,
     ) -> None:
         if self._identity_resolver is None:
-            raise RuntimeError(
-                "Persisted endpoint checks require an IdentityResolver"
-            )
+            raise RuntimeError("Persisted endpoint checks require an IdentityResolver")
         for endpoint_name, endpoint in (
             ("source", relationship.get_source()),
             ("target", relationship.get_target()),
         ):
-            resolved = self._identity_resolver.get_by_id(endpoint.reference)
+            resolved = self._identity_resolver.get_by_id(
+                endpoint.reference,
+                connection=connection,
+            )
             if resolved is None:
                 raise RelationshipEndpointNotFoundError(
                     f"Relationship {endpoint_name} identity "

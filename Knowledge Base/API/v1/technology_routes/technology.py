@@ -2,7 +2,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from application.services.technology_service import (
     TechnologyService,
@@ -15,6 +15,11 @@ from API.v1.DTOs.technology_dtos import (
     TechnologyResponse,
     to_technology_response,
 )
+from API.v1.DTOs.create_result_dtos import (
+    CreateResultResponse,
+    http_status_for_create_result,
+    to_create_result_response,
+)
 
 
 router = APIRouter(
@@ -25,8 +30,12 @@ router = APIRouter(
 
 @router.post(
     "",
-    response_model=TechnologyResponse,
+    response_model=CreateResultResponse[TechnologyResponse],
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_200_OK: {"model": CreateResultResponse[TechnologyResponse]},
+        status.HTTP_409_CONFLICT: {"model": CreateResultResponse[TechnologyResponse]},
+    },
 )
 def create_technology(
     request: CreateTechnologyRequest,
@@ -34,13 +43,15 @@ def create_technology(
         TechnologyService,
         Depends(get_technology_service),
     ],
-) -> TechnologyResponse:
-    technology = service.create(
+    response: Response,
+) -> CreateResultResponse[TechnologyResponse]:
+    result = service.create(
         canonical_name=request.canonical_name,
         aliases=set(request.aliases),
+        allow_possible_duplicate=request.allow_possible_duplicate,
     )
-
-    return to_technology_response(technology)
+    response.status_code = http_status_for_create_result(result)
+    return to_create_result_response(result, entity_mapper=to_technology_response)
 
 
 @router.get(

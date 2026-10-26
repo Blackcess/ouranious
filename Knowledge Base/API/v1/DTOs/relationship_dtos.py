@@ -21,6 +21,7 @@ class CreateRelationshipRequest(BaseModel):
     target_id: UUID
     relationship_type: RelationshipType
     properties: dict[str, Any] | None = Field(default=None)
+    allow_possible_duplicate: bool = False
 
 
 class RelationshipResponse(BaseModel):

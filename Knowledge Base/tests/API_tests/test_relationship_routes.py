@@ -91,7 +91,7 @@ def create_identity(client: TestClient, kind: IdentityKind) -> UUID:
         f"HTTP {response.status_code}: {response.text}"
     )
 
-    identity_id = response.json()["id"]
+    identity_id = response.json()["entity"]["id"]
     assert UUID(identity_id)
 
     return UUID(identity_id)
@@ -186,7 +186,8 @@ def test_create_and_retrieve_every_relationship_type(
         f"HTTP {create_response.status_code}: {create_response.text}"
     )
 
-    created = create_response.json()
+    created = create_response.json()["entity"]
+    create_result = create_response.json()
 
     assert UUID(created["id"])
     relationship_id = created["id"]
@@ -194,6 +195,8 @@ def test_create_and_retrieve_every_relationship_type(
     assert created["source_id"] == str(source_id)
     assert created["target_id"] == str(target_id)
     assert created["relationship_type"] == relationship_type.value
+    assert create_result["outcome"] == "no_match"
+    assert create_result["action"] == "created"
 
     # Retrieve the relationship from the persistence layer through
     # another HTTP request, rather than trusting only the POST response.
@@ -210,6 +213,53 @@ def test_create_and_retrieve_every_relationship_type(
     assert retrieved["target_id"] == str(target_id)
     assert retrieved["relationship_type"] == relationship_type.value
     assert retrieved["properties"] == created["properties"]
+
+    duplicate_response = client.post(
+        "/api/v1/relationships",
+        json=request_payload,
+    )
+    assert duplicate_response.status_code == 200
+    assert duplicate_response.json()["outcome"] == "exact_match"
+    assert duplicate_response.json()["action"] == "returned_existing"
+    assert duplicate_response.json()["entity"]["id"] == relationship_id
+
+
+def test_possible_relationship_duplicate_requires_explicit_override(
+    client: TestClient,
+):
+    source_id = create_identity(client, IdentityKind.PERSON)
+    target_id = create_identity(client, IdentityKind.ORGANISATION)
+    base_payload = {
+        "source_id": str(source_id),
+        "target_id": str(target_id),
+        "relationship_type": RelationshipType.FOUNDED.value,
+        "properties": {},
+    }
+    initial = client.post("/api/v1/relationships", json=base_payload)
+    assert initial.status_code == 201
+
+    more_specific_payload = {
+        **base_payload,
+        "properties": {"founding_date": "2020-01-01"},
+    }
+    blocked = client.post(
+        "/api/v1/relationships",
+        json=more_specific_payload,
+    )
+    assert blocked.status_code == 409
+    assert blocked.json()["outcome"] == "possible_duplicate"
+    assert blocked.json()["action"] == "blocked"
+    assert blocked.json()["entity"] is None
+    assert blocked.json()["candidates"]
+
+    overridden = client.post(
+        "/api/v1/relationships",
+        json={**more_specific_payload, "allow_possible_duplicate": True},
+    )
+    assert overridden.status_code == 201
+    assert overridden.json()["outcome"] == "possible_duplicate"
+    assert overridden.json()["action"] == "created"
+    assert overridden.json()["override_applied"] is True
 
 
 def test_create_relationship_with_missing_source_returns_404(

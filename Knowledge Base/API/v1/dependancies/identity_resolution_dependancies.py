@@ -1,7 +1,6 @@
 """FastAPI dependency factory for identity duplicate resolution."""
 
 from application.services.identity_resolution_service import IdentityResolutionService
-from infrastructure.database.connection import DatabaseManager
 from repositories.industry_repository import IndustryRepository
 from repositories.organisation_repository import OrganisationRepository
 from repositories.person_repository import PersonRepository
@@ -20,5 +19,4 @@ def get_identity_resolution_service() -> IdentityResolutionService:
         industry_repository=IndustryRepository(),
         product_repository=ProductRepository(),
         technology_repository=TechnologyRepository(),
-        database_manager=DatabaseManager(),
     )

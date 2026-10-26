@@ -21,7 +21,6 @@ from domain_models.Identity_model.identity import (
     IdentityKind,
     IdentityReference,
 )
-from infrastructure.database.connection import DatabaseManager
 from repositories.industry_repository import IndustryRepository
 from repositories.organisation_repository import OrganisationRepository
 from repositories.person_repository import PersonRepository
@@ -56,7 +55,6 @@ class IdentityResolutionService:
         industry_repository: IndustryRepository,
         product_repository: ProductRepository,
         technology_repository: TechnologyRepository,
-        database_manager: DatabaseManager,
         strategy_registry: IdentityStrategyRegistry | None = None,
     ):
         self._repositories: dict[IdentityKind, IdentityCandidateRepository] = {
@@ -67,7 +65,6 @@ class IdentityResolutionService:
             IdentityKind.PRODUCT: product_repository,
             IdentityKind.TECHNOLOGY: technology_repository,
         }
-        self._database_manager = database_manager
         self._strategy_registry = (
             strategy_registry or build_default_identity_strategy_registry()
         )
@@ -76,6 +73,8 @@ class IdentityResolutionService:
     def resolve(
         self,
         request: IdentityResolutionRequest,
+        *,
+        connection: Connection,
     ) -> IdentityResolutionResult:
         if not isinstance(request, IdentityResolutionRequest):
             raise TypeError("request must be an IdentityResolutionRequest")
@@ -91,14 +90,16 @@ class IdentityResolutionService:
         # Exclude the represented record by default when resolving an existing
         # identity; callers can explicitly choose a different reference.
         excluded_reference = request.exclude_reference or identity.reference
-        with self._database_manager.connection() as connection:
-            candidate_page = repository.find_candidates(
-                identity,
-                exclude_reference=excluded_reference,
-                include_retired=request.include_retired,
-                limit=request.candidate_limit,
-                connection=connection,
-            )
+        candidate_page = repository.find_candidates(
+            identity,
+            exclude_reference=excluded_reference,
+            include_retired=request.include_retired,
+            limit=request.candidate_limit,
+            connection=connection,
+        )
+
+        for page in candidate_page.items:
+            print(page.reference.value)
 
         matches: list[CandidateMatch] = []
         for candidate in candidate_page.items:

@@ -6,6 +6,12 @@ from domain_models.relationship_models.relationship import Relationship, Relatio
 from domain_models.relationship_models.relationship_types.relationship_types import RelationshipType
 from repositories.relationship_repository import RelationshipRepository
 from infrastructure.database.connection import DatabaseManager
+from application.services.create_orchestration import resolve_and_create_relationship
+from application.services.relationship_resolution_service import (
+    RelationshipResolutionService,
+)
+from application.resolution.create_result import CreateResult
+from application.resolution.relationship.contracts import RelationshipResolutionResult
 
 
 class RelationshipService:
@@ -15,9 +21,11 @@ class RelationshipService:
         *,
         relationship_repository: RelationshipRepository,
         database_manager: DatabaseManager,
+        relationship_resolution_service: RelationshipResolutionService,
     ):
         self._relationship_repository = relationship_repository
         self._database_manager = database_manager
+        self._relationship_resolution_service = relationship_resolution_service
 
     def create(
         self,
@@ -26,7 +34,8 @@ class RelationshipService:
         target: Identity,
         relationship_type: RelationshipType,
         properties: object | None = None,
-    ) -> Relationship:
+        allow_possible_duplicate: bool = False,
+    ) -> CreateResult[Relationship, RelationshipResolutionResult]:
         """
         Create and persist a Relationship.
 
@@ -44,27 +53,13 @@ class RelationshipService:
             properties=properties,
         )
 
-        # 2. Persist the relationship atomically.
-        return self._persist_relationship(relationship)
-
-    def _persist_relationship(
-        self,
-        relationship: Relationship,
-    ) -> Relationship:
-        """
-        Persist a Relationship atomically.
-
-        The repository performs persistence while this service owns
-        the transaction boundary.
-        """
-
-        with self._database_manager.transaction() as connection:
-            self._relationship_repository.save(
-                relationship,
-                connection=connection,
-            )
-
-        return relationship
+        return resolve_and_create_relationship(
+            relationship,
+            repository=self._relationship_repository,
+            database_manager=self._database_manager,
+            resolver=self._relationship_resolution_service,
+            allow_possible_duplicate=allow_possible_duplicate,
+        )
 
     def get_by_id(
         self,

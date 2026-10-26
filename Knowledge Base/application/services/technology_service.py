@@ -9,6 +9,10 @@ from domain_models.Identity_model.Technology_model.technology import Technology
 
 from repositories.technology_repository import TechnologyRepository
 from infrastructure.database.connection import DatabaseManager
+from application.services.create_orchestration import resolve_and_create_identity
+from application.services.identity_resolution_service import IdentityResolutionService
+from application.resolution.create_result import CreateResult
+from application.resolution.identity.contracts import IdentityResolutionResult
 
 
 class TechnologyService:
@@ -18,9 +22,11 @@ class TechnologyService:
         *,
         technology_repository: TechnologyRepository,
         database_manager: DatabaseManager,
+        identity_resolution_service: IdentityResolutionService,
     ):
         self._technology_repository = technology_repository
         self._database_manager = database_manager
+        self._identity_resolution_service = identity_resolution_service
 
     def create(
         self,
@@ -28,7 +34,8 @@ class TechnologyService:
         canonical_name: str,
         aliases: set[str] | None = None,
         lifecycle_state: LifecycleState = LifecycleState.CANONICAL,
-    ) -> Technology:
+        allow_possible_duplicate: bool = False,
+    ) -> CreateResult[Technology, IdentityResolutionResult]:
         """
         Create and persist a Technology.
 
@@ -44,23 +51,13 @@ class TechnologyService:
             lifecycle_state=lifecycle_state,
         )
 
-        return self._persist_technology(technology)
-
-    def _persist_technology(
-        self,
-        technology: Technology,
-    ) -> Technology:
-        """
-        Persist a Technology atomically.
-        """
-
-        with self._database_manager.transaction() as connection:
-            self._technology_repository.save(
-                technology,
-                connection=connection,
-            )
-
-        return technology
+        return resolve_and_create_identity(
+            technology,
+            repository=self._technology_repository,
+            database_manager=self._database_manager,
+            resolver=self._identity_resolution_service,
+            allow_possible_duplicate=allow_possible_duplicate,
+        )
 
     def get_by_id(
         self,

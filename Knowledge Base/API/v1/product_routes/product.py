@@ -2,7 +2,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from application.services.product_service import (
     ProductService,
@@ -15,6 +15,11 @@ from API.v1.DTOs.product_dto import (
     ProductResponse,
     to_product_response,
 )
+from API.v1.DTOs.create_result_dtos import (
+    CreateResultResponse,
+    http_status_for_create_result,
+    to_create_result_response,
+)
 
 
 router = APIRouter(
@@ -25,8 +30,12 @@ router = APIRouter(
 
 @router.post(
     "",
-    response_model=ProductResponse,
+    response_model=CreateResultResponse[ProductResponse],
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_200_OK: {"model": CreateResultResponse[ProductResponse]},
+        status.HTTP_409_CONFLICT: {"model": CreateResultResponse[ProductResponse]},
+    },
 )
 def create_product(
     request: CreateProductRequest,
@@ -34,13 +43,15 @@ def create_product(
         ProductService,
         Depends(get_product_service),
     ],
-) -> ProductResponse:
-    product = service.create(
+    response: Response,
+) -> CreateResultResponse[ProductResponse]:
+    result = service.create(
         canonical_name=request.canonical_name,
         aliases=set(request.aliases),
+        allow_possible_duplicate=request.allow_possible_duplicate,
     )
-
-    return to_product_response(product)
+    response.status_code = http_status_for_create_result(result)
+    return to_create_result_response(result, entity_mapper=to_product_response)
 
 
 @router.get(

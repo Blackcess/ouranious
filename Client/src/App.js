@@ -18,6 +18,7 @@ import OnboardingStepper from "./Account Creation/onboarding/steps/main stepper/
 import { JoinCommunity } from "./Community/Join Community/JoinCommunity";
 import { PublishedArticles } from "./Admnistration Section/Admin Layout/My Articles/published articles/PublishedArticles";
 import {DraftArticles} from "./Admnistration Section/Admin Layout/My Articles/draft articles/DraftArticles"
+import ProvenanceWorkspace from "./features/provenance/ProvenanceWorkspace";
 
 function App() {
   
@@ -39,6 +40,7 @@ function App() {
           <Route path="category/:id" element={<CategoryPageWrapper />}/>
           <Route path="uploads" element={<ArticleEditorPage />}/>
           <Route path="community" element ={<JoinCommunity/>} />
+          <Route path="provenance" element={<ProvenanceWorkspace/>} />
           <Route path="admin" element={<AdminLayout/>}>
             <Route index element= {<PublishedArticles/>}/>
             <Route path="published" element= {<PublishedArticles/>}/>

@@ -2,6 +2,11 @@ from uuid import uuid4
 from unittest.mock import Mock
 
 from fastapi.testclient import TestClient
+from application.resolution.create_result import CreateAction, CreateResult
+from application.resolution.identity.contracts import (
+    IdentityResolutionResult,
+    ResolutionOutcome,
+)
 
 from API.app import app
 from API.v1.dependancies.place_dependancies import get_place_service
@@ -26,7 +31,13 @@ def test_create_place():
     from domain_models.Identity_model.identity import IdentityReference
     place._reference = IdentityReference(value=place_id)
 
-    service.create.return_value = place
+    resolution = IdentityResolutionResult(outcome=ResolutionOutcome.NO_MATCH)
+    service.create.return_value = CreateResult(
+        outcome=ResolutionOutcome.NO_MATCH,
+        action=CreateAction.CREATED,
+        entity=place,
+        resolution=resolution,
+    )
 
     app.dependency_overrides[get_place_service] = lambda: service
 
@@ -42,15 +53,18 @@ def test_create_place():
             )
 
         assert response.status_code == 201
-        assert response.json()["id"] == str(place_id)
-        assert response.json()["canonical_name"] == "Harare"
-        assert response.json()["aliases"] == ["Salisbury"]
-        assert response.json()["kind"] == "city"
+        assert response.json()["outcome"] == "no_match"
+        assert response.json()["action"] == "created"
+        assert response.json()["entity"]["id"] == str(place_id)
+        assert response.json()["entity"]["canonical_name"] == "Harare"
+        assert response.json()["entity"]["aliases"] == ["Salisbury"]
+        assert response.json()["entity"]["kind"] == "city"
 
         service.create.assert_called_once_with(
             canonical_name="Harare",
             place_kind=PlaceKind.CITY,
             aliases={"Salisbury"},
+        allow_possible_duplicate=False,
         )
     finally:
         app.dependency_overrides.clear()

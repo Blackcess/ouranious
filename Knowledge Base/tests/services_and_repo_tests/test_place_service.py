@@ -3,31 +3,23 @@ from domain_models.Identity_model.identity import (
     LifecycleState,
 )
 from domain_models.Identity_model.Place_model.place import PlaceKind
-
-from infrastructure.database.connection import DatabaseManager
-from repositories.place_repository import PlaceRepository
-from application.services.place_service import PlaceCreationService
+from uuid import uuid4
 
 
-def test_place_creation_service_round_trip():
-
-    database_manager = DatabaseManager()
-    place_repository = PlaceRepository()
-
-    place_service = PlaceCreationService(
-        place_repository=place_repository,
-        database_manager=database_manager,
-    )
+def test_place_creation_service_round_trip(service_environment):
+    place_service = service_environment["place"]
+    canonical_name = f"Harare {uuid4().hex}"
+    aliases = {f"Harare City {uuid4().hex}", f"Salisbury {uuid4().hex}"}
 
     # Create and persist through the service.
-    place = place_service.create(
-        canonical_name="Harare",
+    result = place_service.create(
+        canonical_name=canonical_name,
         place_kind=PlaceKind.CITY,
-        aliases={
-            "Harare City",
-            "Salisbury",
-        },
+        aliases=aliases,
     )
+    place = result.entity
+    service_environment["track_identity"](place)
+    assert result.action.value == "created"
 
     # Retrieve through the service.
     retrieved = place_service.get_by_id(
@@ -48,16 +40,12 @@ def test_place_creation_service_round_trip():
     # Canonical representation.
     assert (
         retrieved.representations.canonical_name
-        == "Harare"
+        == canonical_name
     )
 
     # Aliases.
-    assert retrieved.representations.aliases == {
-        "Harare City",
-        "Salisbury",
-    }
+    assert retrieved.representations.aliases == aliases
 
     # Place-specific data.
     assert retrieved.get_place_kind() == PlaceKind.CITY
 
-test_place_creation_service_round_trip()

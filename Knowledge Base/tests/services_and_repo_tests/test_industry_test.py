@@ -7,6 +7,7 @@ from domain_models.Identity_model.Industry_model.industry import Industry
 
 from infrastructure.database.connection import DatabaseManager
 from repositories.industry_repository import IndustryRepository
+from uuid import uuid4
 
 
 def test_industry_repository_round_trip():
@@ -14,13 +15,13 @@ def test_industry_repository_round_trip():
     database_manager = DatabaseManager()
     industry_repository = IndustryRepository()
 
+    token = uuid4().hex
+    canonical_name = f"Financial Technology {token}"
+    aliases = {f"Fintech {token}", f"Financial Tech {token}"}
     industry = Industry(
         representations=IdentityRepresentations(
-            canonical_name="Financial Technology",
-            aliases={
-                "Fintech",
-                "Financial Tech",
-            },
+            canonical_name=canonical_name,
+            aliases=aliases,
         ),
         lifecycle_state=LifecycleState.CANONICAL,
     )
@@ -45,14 +46,8 @@ def test_industry_repository_round_trip():
 
     assert (
         retrieved.representations.canonical_name
-        == "Financial Technology"
+        == canonical_name
     )
 
-    assert retrieved.representations.aliases == {
-        "Fintech",
-        "Financial Tech",
-    }
+    assert retrieved.representations.aliases == aliases
 
-    print("Test Passed")
-
-test_industry_repository_round_trip()

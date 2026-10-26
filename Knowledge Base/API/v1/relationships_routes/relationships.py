@@ -2,7 +2,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from API.v1.DTOs.relationship_dtos import (
     CreateRelationshipRequest,
@@ -11,6 +11,11 @@ from API.v1.DTOs.relationship_dtos import (
 )
 from API.v1.DTOs.relationship_properties import (
     deserialize_relationship_properties,
+)
+from API.v1.DTOs.create_result_dtos import (
+    CreateResultResponse,
+    http_status_for_create_result,
+    to_create_result_response,
 )
 from API.v1.dependancies.relationship_dependancies import (
     get_relationship_service,
@@ -28,8 +33,12 @@ router = APIRouter(
 
 @router.post(
     "",
-    response_model=RelationshipResponse,
+    response_model=CreateResultResponse[RelationshipResponse],
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_200_OK: {"model": CreateResultResponse[RelationshipResponse]},
+        status.HTTP_409_CONFLICT: {"model": CreateResultResponse[RelationshipResponse]},
+    },
 )
 def create_relationship(
     request: CreateRelationshipRequest,
@@ -41,7 +50,8 @@ def create_relationship(
         IdentityResolver,
         Depends(get_identity_resolver),
     ],
-) -> RelationshipResponse:
+    response: Response,
+) -> CreateResultResponse[RelationshipResponse]:
     # Resolve the source identity.
     source = identity_resolver.get_by_id(request.source_id)
 
@@ -67,12 +77,19 @@ def create_relationship(
             payload=request.properties,
         )
 
-        relationship = service.create(
+        result = service.create(
             source=source,
             target=target,
             relationship_type=request.relationship_type,
             properties=properties,
+            allow_possible_duplicate=request.allow_possible_duplicate,
         )
+
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
 
     except (ValueError, TypeError) as exc:
         raise HTTPException(
@@ -80,7 +97,11 @@ def create_relationship(
             detail=str(exc),
         ) from exc
 
-    return to_relationship_response(relationship)
+    response.status_code = http_status_for_create_result(result)
+    return to_create_result_response(
+        result,
+        entity_mapper=to_relationship_response,
+    )
 
 
 @router.get(

@@ -2,29 +2,18 @@ from domain_models.Identity_model.identity import (
     IdentityKind,
     LifecycleState,
 )
-
-from infrastructure.database.connection import DatabaseManager
-from repositories.industry_repository import IndustryRepository
-from application.services.industry_service import IndustryCreationService
+from uuid import uuid4
 
 
-def test_industry_creation_service_round_trip():
+def test_industry_creation_service_round_trip(service_environment):
+    industry_service = service_environment["industry"]
+    canonical_name = f"Financial Technology {uuid4().hex}"
+    aliases = {f"Fintech {uuid4().hex}", f"Financial Tech {uuid4().hex}"}
 
-    database_manager = DatabaseManager()
-    industry_repository = IndustryRepository()
-
-    industry_service = IndustryCreationService(
-        industry_repository=industry_repository,
-        database_manager=database_manager,
-    )
-
-    industry = industry_service.create(
-        canonical_name="Financial Technology",
-        aliases={
-            "Fintech",
-            "Financial Tech",
-        },
-    )
+    result = industry_service.create(canonical_name=canonical_name, aliases=aliases)
+    industry = result.entity
+    service_environment["track_identity"](industry)
+    assert result.action.value == "created"
 
     retrieved = industry_service.get_by_id(
         industry.reference,
@@ -44,15 +33,9 @@ def test_industry_creation_service_round_trip():
     # Canonical name.
     assert (
         retrieved.representations.canonical_name
-        == "Financial Technology"
+        == canonical_name
     )
 
     # Aliases.
-    assert retrieved.representations.aliases == {
-        "Fintech",
-        "Financial Tech",
-    }
+    assert retrieved.representations.aliases == aliases
 
-    print("Test Passed")
-
-test_industry_creation_service_round_trip()

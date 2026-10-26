@@ -11,6 +11,7 @@
 .env.production
 # testing
 /coverage
+/.jest-cache
 
 # production
 /build

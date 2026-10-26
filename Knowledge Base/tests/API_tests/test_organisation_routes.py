@@ -6,6 +6,11 @@ from fastapi.testclient import TestClient
 
 from API.app import app
 from API.v1.dependancies.organisation_dependancies import get_organisation_service
+from application.resolution.create_result import CreateAction, CreateResult
+from application.resolution.identity.contracts import (
+    IdentityResolutionResult,
+    ResolutionOutcome,
+)
 from domain_models.Identity_model.Organisation_model.organisation_classification import (
     OrganisationClassification,
 )
@@ -27,6 +32,7 @@ class FakeOrganisationCreationService:
         stage,
         business_model,
         aliases=None,
+        allow_possible_duplicate=False,
     ):
         self.calls.append({
             "canonical_name": canonical_name,
@@ -34,6 +40,7 @@ class FakeOrganisationCreationService:
             "stage": stage,
             "business_model": business_model,
             "aliases": aliases,
+            "allow_possible_duplicate": allow_possible_duplicate,
         })
 
         startup = SimpleNamespace(
@@ -55,7 +62,36 @@ class FakeOrganisationCreationService:
             ),
         )
 
-        return organisation
+        if self.next_outcome is ResolutionOutcome.POSSIBLE_DUPLICATE:
+            resolution = IdentityResolutionResult(
+                outcome=ResolutionOutcome.POSSIBLE_DUPLICATE,
+                ambiguous=True,
+                candidates_truncated=True,
+            )
+            if not allow_possible_duplicate:
+                return CreateResult(
+                    outcome=resolution.outcome,
+                    action=CreateAction.BLOCKED,
+                    entity=None,
+                    resolution=resolution,
+                )
+            return CreateResult(
+                outcome=resolution.outcome,
+                action=CreateAction.CREATED,
+                entity=organisation,
+                resolution=resolution,
+                override_applied=True,
+            )
+
+        resolution = IdentityResolutionResult(outcome=ResolutionOutcome.NO_MATCH)
+        return CreateResult(
+            outcome=resolution.outcome,
+            action=CreateAction.CREATED,
+            entity=organisation,
+            resolution=resolution,
+        )
+
+    next_outcome = ResolutionOutcome.NO_MATCH
 
 
 fake_service = FakeOrganisationCreationService()
@@ -99,15 +135,45 @@ def test_create_startup_returns_201(setup_client):
 
     body = response.json()
 
-    assert body["canonical_name"] == "Example Startup"
-    assert body["founding_year"] == 2024
-    assert body["stage"] == "pre_seed"
-    assert body["business_model"] == "b2b"
-    assert body["aliases"] == ["Example"]
-    assert "id" in body
+    assert body["outcome"] == "no_match"
+    assert body["action"] == "created"
+    assert body["override_applied"] is False
+    assert body["entity"]["canonical_name"] == "Example Startup"
+    assert body["entity"]["founding_year"] == 2024
+    assert body["entity"]["stage"] == "pre_seed"
+    assert body["entity"]["business_model"] == "b2b"
+    assert body["entity"]["aliases"] == ["Example"]
+    assert "id" in body["entity"]
 
     assert len(fake_service.calls) == 1
     assert fake_service.calls[0]["aliases"] == {"Example"}
+    assert fake_service.calls[0]["allow_possible_duplicate"] is False
+
+
+def test_possible_duplicate_blocks_unless_explicitly_overridden(setup_client):
+    client, fake_service = setup_client
+    fake_service.next_outcome = ResolutionOutcome.POSSIBLE_DUPLICATE
+    payload = {
+        "canonical_name": "Possible Startup",
+        "founding_year": 2024,
+        "stage": "pre_seed",
+        "business_model": "b2b",
+    }
+
+    blocked = client.post("/api/v1/organisations/startups", json=payload)
+    assert blocked.status_code == 409
+    assert blocked.json()["action"] == "blocked"
+    assert blocked.json()["entity"] is None
+    assert blocked.json()["candidates_truncated"] is True
+
+    overridden = client.post(
+        "/api/v1/organisations/startups",
+        json={**payload, "allow_possible_duplicate": True},
+    )
+    assert overridden.status_code == 201
+    assert overridden.json()["outcome"] == "possible_duplicate"
+    assert overridden.json()["action"] == "created"
+    assert overridden.json()["override_applied"] is True
 
 
 # Test 2: Invalid Enum rejected before service invocation

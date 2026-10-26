@@ -6,6 +6,7 @@ from API.v1.industry_routes.industry import router as industry_router
 from API.v1.product_routes.product import router as product_router
 from API.v1.technology_routes.technology import router as technology_router
 from API.v1.relationships_routes.relationships import router as relationship_router
+from API.v1.provenance_routes import router as provenance_router
 
 router = APIRouter()
 
@@ -16,6 +17,7 @@ router.include_router(industry_router)
 router.include_router(product_router)
 router.include_router(technology_router)
 router.include_router(relationship_router)
+router.include_router(provenance_router)
 
 
 

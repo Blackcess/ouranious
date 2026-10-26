@@ -2,29 +2,18 @@ from domain_models.Identity_model.identity import (
     IdentityKind,
     LifecycleState,
 )
-
-from infrastructure.database.connection import DatabaseManager
-from repositories.product_repository import ProductRepository
-from application.services.product_service import ProductCreationService
+from uuid import uuid4
 
 
-def test_product_creation_service_round_trip():
+def test_product_creation_service_round_trip(service_environment):
+    product_service = service_environment["product"]
+    canonical_name = f"EcoCash {uuid4().hex}"
+    aliases = {f"Eco Cash {uuid4().hex}", f"EcoCash Mobile Money {uuid4().hex}"}
 
-    database_manager = DatabaseManager()
-    product_repository = ProductRepository()
-
-    product_service = ProductCreationService(
-        product_repository=product_repository,
-        database_manager=database_manager,
-    )
-
-    product = product_service.create(
-        canonical_name="EcoCash",
-        aliases={
-            "Eco Cash",
-            "EcoCash Mobile Money",
-        },
-    )
+    result = product_service.create(canonical_name=canonical_name, aliases=aliases)
+    product = result.entity
+    service_environment["track_identity"](product)
+    assert result.action.value == "created"
 
     retrieved = product_service.get_by_id(
         product.reference,
@@ -38,13 +27,7 @@ def test_product_creation_service_round_trip():
 
     assert (
         retrieved.representations.canonical_name
-        == "EcoCash"
+        == canonical_name
     )
 
-    assert retrieved.representations.aliases == {
-        "Eco Cash",
-        "EcoCash Mobile Money",
-    }
-    print("Test Passed")
-
-test_product_creation_service_round_trip()
+    assert retrieved.representations.aliases == aliases

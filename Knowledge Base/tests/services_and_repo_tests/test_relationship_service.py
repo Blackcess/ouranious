@@ -3,41 +3,28 @@
 from datetime import date
 from decimal import Decimal
 
-from application.services.identity_relationship_service import RelationshipService
-from application.services.organisation_service import OrganisationCreationService
 from domain_models.Identity_model.Organisation_model.classification_specific_domain_model.investor.investor import InvestmentStage
-from infrastructure.database.connection import DatabaseManager
 from domain_models.relationship_models.relationship_properties.properties.investmentProperties import InvestmentProperties
 from domain_models.relationship_models.relationship_types.relationship_types import RelationshipType
-from repositories.organisation_repository import OrganisationRepository
-from repositories.relationship_repository import RelationshipRepository
-from domain_models.relationship_models.relationship import Relationship
+from uuid import uuid4
 
-def test_invested_in_relationship_service_round_trip():
-    database_manager = DatabaseManager()
+def test_invested_in_relationship_service_round_trip(service_environment):
+    organisation_service = service_environment["organisation"]
+    relationship_service = service_environment["relationship"]
 
-    organisation_repository = OrganisationRepository()
-    relationship_repository = RelationshipRepository()
-
-    organisation_service = OrganisationCreationService(
-        organisation_repository=organisation_repository,
-        database_manager=database_manager,
+    investor_result = organisation_service.create_incubator(
+        canonical_name=f"Test Investment Fund {uuid4().hex}",
+        aliases={f"TIF {uuid4().hex}"},
     )
+    investor = investor_result.entity
+    service_environment["track_identity"](investor)
 
-    relationship_service = RelationshipService(
-        relationship_repository=relationship_repository,
-        database_manager=database_manager,
+    startup_result = organisation_service.create_incubator(
+        canonical_name=f"Test Startup {uuid4().hex}",
+        aliases={f"TS {uuid4().hex}"},
     )
-
-    investor = organisation_service.create_incubator(
-        canonical_name="Test Investment Fund",
-        aliases={"TIF"},
-    )
-
-    startup = organisation_service.create_incubator(
-        canonical_name="Test Startup",
-        aliases={"TS"},
-    )
+    startup = startup_result.entity
+    service_environment["track_identity"](startup)
 
     properties = InvestmentProperties(
         investment_amount=Decimal("250000.00"),
@@ -50,12 +37,15 @@ def test_invested_in_relationship_service_round_trip():
         is_lead_investor=True,
     )
 
-    relationship = relationship_service.create(
+    relationship_result = relationship_service.create(
         source=investor,
         target=startup,
         relationship_type=RelationshipType.INVESTED_IN,
         properties=properties,
     )
+    relationship = relationship_result.entity
+    service_environment["track_relationship"](relationship)
+    assert relationship_result.action.value == "created"
 
     retrieved = relationship_service.get_by_id(
         relationship.get_reference()
@@ -66,7 +56,3 @@ def test_invested_in_relationship_service_round_trip():
     assert retrieved.get_type() == RelationshipType.INVESTED_IN
     assert retrieved.get_source().reference == investor.reference
     assert retrieved.get_target().reference == startup.reference
-
-    print("TEST PASSED: test_invested_in_relationship_service_round_trip")
-
-test_invested_in_relationship_service_round_trip()

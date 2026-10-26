@@ -10,6 +10,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
+from concurrent.futures import ThreadPoolExecutor
 
 from application.resolution.identity.contracts import (
     CandidateMatchKind,
@@ -26,9 +27,11 @@ from application.resolution.relationship.canonicalization import (
 )
 from application.services.identity_resolution_service import IdentityResolutionService
 from application.services.identity_resolver import IdentityResolver
+from application.services.identity_relationship_service import RelationshipService
 from application.services.relationship_resolution_service import (
     RelationshipResolutionService,
 )
+from application.services.person_service import PersonService
 from domain_models.Identity_model.identity import (
     IdentityKind,
     IdentityRepresentations,
@@ -63,6 +66,10 @@ from domain_models.relationship_models.relationship import Relationship
 from domain_models.relationship_models.relationship_properties.properties.acquisitionProperties import (
     AcquisitionProperties,
     AcquisitionType,
+)
+from domain_models.relationship_models.relationship_properties.properties.partnershipProperties import (
+    PartnershipProperties,
+    PartnershipStatus,
 )
 from domain_models.relationship_models.relationship_types.relationship_type_specification import (
     specification_registry,
@@ -215,7 +222,6 @@ def resolution_database():
         industry_repository=repositories[IdentityKind.INDUSTRY],
         product_repository=repositories[IdentityKind.PRODUCT],
         technology_repository=repositories[IdentityKind.TECHNOLOGY],
-        database_manager=database_manager,
     )
 
     # The database records are unique to this fixture run. Relationships use
@@ -274,7 +280,6 @@ def resolution_database():
 
     relationship_service = RelationshipResolutionService(
         relationship_repository=relationship_repository,
-        database_manager=database_manager,
         identity_resolver=IdentityResolver(
             person_repository=repositories[IdentityKind.PERSON],
             organisation_repository=repositories[IdentityKind.ORGANISATION],
@@ -286,18 +291,31 @@ def resolution_database():
         ),
         require_persisted_endpoints=True,
     )
+    person_create_service = PersonService(
+        person_repository=repositories[IdentityKind.PERSON],
+        database_manager=database_manager,
+        identity_resolution_service=identity_service,
+    )
+    relationship_create_service = RelationshipService(
+        relationship_repository=relationship_repository,
+        database_manager=database_manager,
+        relationship_resolution_service=relationship_service,
+    )
 
     yield {
         "database_manager": database_manager,
         "repositories": repositories,
         "relationship_repository": relationship_repository,
         "identity_service": identity_service,
+        "person_create_service": person_create_service,
         "relationship_service": relationship_service,
+        "relationship_create_service": relationship_create_service,
         "identities": identities,
         "classification_identities": classification_identities,
         "relationships": tuple(saved_relationships),
+        "relationships_to_save": saved_relationships,
+        "identities_to_save": identities_to_save,
     }
-
     relationship_ids = [
         relationship.get_reference().value.bytes
         for relationship in saved_relationships
@@ -363,6 +381,174 @@ def resolution_database():
                 )
 
 
+def _resolve_identity(resolution_database, request):
+    with resolution_database["database_manager"].connection() as connection:
+        return resolution_database["identity_service"].resolve(
+            request,
+            connection=connection,
+        )
+
+
+def _resolve_relationship(resolution_database, request):
+    with resolution_database["database_manager"].connection() as connection:
+        return resolution_database["relationship_service"].resolve(
+            request,
+            connection=connection,
+        )
+
+
+def test_identity_create_result_covers_create_exact_block_and_override(
+    resolution_database,
+):
+    service = resolution_database["person_create_service"]
+    canonical_name = f"Create outcome {uuid4().hex}"
+    alias = f"Shared create alias {uuid4().hex}"
+
+    created = service.create(canonical_name=canonical_name, aliases={alias})
+    assert created.action.value == "created"
+    assert created.outcome is ResolutionOutcome.NO_MATCH
+    resolution_database["identities_to_save"].append(created.entity)
+
+    exact = service.create(canonical_name=canonical_name, aliases={alias})
+    assert exact.action.value == "returned_existing"
+    assert exact.outcome is ResolutionOutcome.EXACT_MATCH
+    assert exact.entity.reference == created.entity.reference
+
+    possible_name = f"Different identity {uuid4().hex}"
+    blocked = service.create(
+        canonical_name=possible_name,
+        aliases={alias},
+    )
+    assert blocked.action.value == "blocked"
+    assert blocked.outcome is ResolutionOutcome.POSSIBLE_DUPLICATE
+    assert blocked.entity is None
+
+    overridden = service.create(
+        canonical_name=possible_name,
+        aliases={alias},
+        allow_possible_duplicate=True,
+    )
+    assert overridden.action.value == "created"
+    assert overridden.outcome is ResolutionOutcome.POSSIBLE_DUPLICATE
+    assert overridden.override_applied is True
+    resolution_database["identities_to_save"].append(overridden.entity)
+
+
+def test_concurrent_identity_creates_serialize_on_resolution_key(
+    resolution_database,
+):
+    service = resolution_database["person_create_service"]
+    canonical_name = f"Concurrent create {uuid4().hex}"
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(
+            executor.map(
+                lambda _: service.create(canonical_name=canonical_name),
+                range(2),
+            )
+        )
+
+    actions = sorted(result.action.value for result in results)
+    assert actions == ["created", "returned_existing"]
+    assert results[0].entity.reference == results[1].entity.reference
+    created_entity = next(
+        result.entity for result in results if result.action.value == "created"
+    )
+    resolution_database["identities_to_save"].append(created_entity)
+
+
+def test_relationship_create_result_blocks_possible_and_allows_override(
+    resolution_database,
+):
+    service = resolution_database["relationship_create_service"]
+    source = resolution_database["classification_identities"][
+        OrganisationClassification.STARTUP
+    ]
+    target = resolution_database["classification_identities"][
+        OrganisationClassification.INVESTOR
+    ]
+
+    created = service.create(
+        source=source,
+        target=target,
+        relationship_type=RelationshipType.PARTNERED_WITH,
+        properties=PartnershipProperties(),
+    )
+    assert created.action.value == "created"
+    assert created.outcome is RelationshipResolutionOutcome.NO_MATCH
+    resolution_database["relationships_to_save"].append(created.entity)
+
+    exact = service.create(
+        source=source,
+        target=target,
+        relationship_type=RelationshipType.PARTNERED_WITH,
+        properties=PartnershipProperties(),
+    )
+    assert exact.action.value == "returned_existing"
+    assert exact.outcome is RelationshipResolutionOutcome.EXACT_MATCH
+    assert exact.entity.get_reference() == created.entity.get_reference()
+
+    possible = PartnershipProperties(partnership_status=PartnershipStatus.ACTIVE)
+    blocked = service.create(
+        source=source,
+        target=target,
+        relationship_type=RelationshipType.PARTNERED_WITH,
+        properties=possible,
+    )
+    assert blocked.action.value == "blocked"
+    assert blocked.outcome is RelationshipResolutionOutcome.POSSIBLE_DUPLICATE
+    assert blocked.entity is None
+
+    overridden = service.create(
+        source=source,
+        target=target,
+        relationship_type=RelationshipType.PARTNERED_WITH,
+        properties=possible,
+        allow_possible_duplicate=True,
+    )
+    assert overridden.action.value == "created"
+    assert overridden.override_applied is True
+    resolution_database["relationships_to_save"].append(overridden.entity)
+
+
+def test_concurrent_relationship_creates_serialize_on_endpoint_pair(
+    resolution_database,
+):
+    service = resolution_database["relationship_create_service"]
+    source = resolution_database["classification_identities"][
+        OrganisationClassification.STARTUP
+    ]
+    target = resolution_database["classification_identities"][
+        OrganisationClassification.INVESTOR
+    ]
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(
+            executor.map(
+                lambda _: service.create(
+                    source=source,
+                    target=target,
+                    relationship_type=RelationshipType.INVESTED_IN,
+                    properties=_empty_properties(
+                        specification_registry[RelationshipType.INVESTED_IN].properties_type
+                    ),
+                ),
+                range(2),
+            )
+        )
+
+    actions = sorted(result.action.value for result in results)
+    assert actions == ["created", "returned_existing"]
+    assert (
+        results[0].entity.get_reference()
+        == results[1].entity.get_reference()
+    )
+    created_entity = next(
+        result.entity for result in results if result.action.value == "created"
+    )
+    resolution_database["relationships_to_save"].append(created_entity)
+
+
 @pytest.mark.parametrize("identity_kind", list(IdentityKind))
 def test_identity_candidate_retrieval_and_canonical_exact_match(
     resolution_database,
@@ -385,8 +571,9 @@ def test_identity_candidate_retrieval_and_canonical_exact_match(
         )
     assert [candidate.reference for candidate in page.items] == [identity.reference]
 
-    result = resolution_database["identity_service"].resolve(
-        IdentityResolutionRequest(request_identity)
+    result = _resolve_identity(
+        resolution_database,
+        IdentityResolutionRequest(request_identity),
     )
     assert result.outcome is ResolutionOutcome.EXACT_MATCH
     assert result.matches[0].kind is CandidateMatchKind.EXACT_MATCH
@@ -405,9 +592,7 @@ def test_identity_canonical_name_matching_persisted_alias_is_exact(
         alias,
         alias=f"Unrelated query alias {uuid4().hex}",
     )
-    result = resolution_database["identity_service"].resolve(
-        IdentityResolutionRequest(query)
-    )
+    result = _resolve_identity(resolution_database, IdentityResolutionRequest(query))
     assert result.outcome is ResolutionOutcome.EXACT_MATCH
     assert result.matches[0].identity.reference == candidate.reference
 
@@ -423,9 +608,7 @@ def test_identity_name_normalization_retrieves_and_matches_candidate(
         f"  {candidate.representations.canonical_name.upper()}   ",
         alias=f"Normalized query alias {uuid4().hex}",
     )
-    result = resolution_database["identity_service"].resolve(
-        IdentityResolutionRequest(query)
-    )
+    result = _resolve_identity(resolution_database, IdentityResolutionRequest(query))
     assert result.outcome is ResolutionOutcome.EXACT_MATCH
     assert result.matches[0].identity.reference == candidate.reference
 
@@ -442,9 +625,7 @@ def test_identity_alias_to_alias_is_possible_duplicate(
         f"Different canonical {uuid4().hex}",
         alias=shared_alias,
     )
-    result = resolution_database["identity_service"].resolve(
-        IdentityResolutionRequest(query)
-    )
+    result = _resolve_identity(resolution_database, IdentityResolutionRequest(query))
     assert result.outcome is ResolutionOutcome.POSSIBLE_DUPLICATE
     assert result.matches[0].kind is CandidateMatchKind.POSSIBLE_DUPLICATE
 
@@ -456,9 +637,7 @@ def test_identity_unrelated_name_is_no_match(resolution_database, identity_kind)
         f"No candidate {uuid4().hex}",
         alias=f"No candidate alias {uuid4().hex}",
     )
-    result = resolution_database["identity_service"].resolve(
-        IdentityResolutionRequest(query)
-    )
+    result = _resolve_identity(resolution_database, IdentityResolutionRequest(query))
     assert result.outcome is ResolutionOutcome.NO_MATCH
 
 
@@ -475,9 +654,7 @@ def test_organisation_classification_specific_strategy_is_registered_and_used(
         candidate.representations.canonical_name,
         classification,
     )
-    result = resolution_database["identity_service"].resolve(
-        IdentityResolutionRequest(query)
-    )
+    result = _resolve_identity(resolution_database, IdentityResolutionRequest(query))
     assert result.outcome is ResolutionOutcome.EXACT_MATCH
     assert result.matches[0].identity.reference == candidate.reference
 
@@ -490,9 +667,7 @@ def test_place_kind_conflict_is_reported_as_possible_duplicate(
         representations=_representations(candidate.representations.canonical_name),
         place_kind=PlaceKind.COUNTRY,
     )
-    result = resolution_database["identity_service"].resolve(
-        IdentityResolutionRequest(query)
-    )
+    result = _resolve_identity(resolution_database, IdentityResolutionRequest(query))
     assert result.outcome is ResolutionOutcome.POSSIBLE_DUPLICATE
     assert result.matches[0].kind is CandidateMatchKind.POSSIBLE_DUPLICATE
 
@@ -511,9 +686,7 @@ def test_startup_attribute_conflict_is_reported_as_possible_duplicate(
         OrganisationClassification.STARTUP,
         Startup(2021, StartupStages.SERIES_A, StartupBusinessModels.B2C),
     )
-    result = resolution_database["identity_service"].resolve(
-        IdentityResolutionRequest(query)
-    )
+    result = _resolve_identity(resolution_database, IdentityResolutionRequest(query))
     assert result.outcome is ResolutionOutcome.POSSIBLE_DUPLICATE
 
 
@@ -554,8 +727,9 @@ def test_every_registered_relationship_type_resolves_persisted_duplicate(
         type=relationship_type,
         properties=persisted.get_properties(),
     )
-    result = resolution_database["relationship_service"].resolve(
-        RelationshipResolutionRequest(equivalent)
+    result = _resolve_relationship(
+        resolution_database,
+        RelationshipResolutionRequest(equivalent),
     )
     assert result.outcome is RelationshipResolutionOutcome.EXACT_MATCH
     assert result.matches[0].relationship.get_reference() == persisted.get_reference()
@@ -585,8 +759,9 @@ def test_acquisition_equivalent_amounts_match_but_distinct_event_date_does_not(
         type=RelationshipType.ACQUIRED,
         properties=props,
     )
-    exact = resolution_database["relationship_service"].resolve(
-        RelationshipResolutionRequest(same_event)
+    exact = _resolve_relationship(
+        resolution_database,
+        RelationshipResolutionRequest(same_event),
     )
     assert exact.outcome is RelationshipResolutionOutcome.EXACT_MATCH
 
@@ -601,8 +776,9 @@ def test_acquisition_equivalent_amounts_match_but_distinct_event_date_does_not(
             acquisition_type=AcquisitionType.FULL_ACQUISITION,
         ),
     )
-    no_match = resolution_database["relationship_service"].resolve(
-        RelationshipResolutionRequest(other_event)
+    no_match = _resolve_relationship(
+        resolution_database,
+        RelationshipResolutionRequest(other_event),
     )
     assert no_match.outcome is RelationshipResolutionOutcome.NO_MATCH
 
@@ -628,8 +804,9 @@ def test_missing_optional_relationship_properties_are_possible_duplicates(
             acquisition_type=AcquisitionType.FULL_ACQUISITION,
         ),
     )
-    result = resolution_database["relationship_service"].resolve(
-        RelationshipResolutionRequest(less_specific)
+    result = _resolve_relationship(
+        resolution_database,
+        RelationshipResolutionRequest(less_specific),
     )
     assert result.outcome is RelationshipResolutionOutcome.POSSIBLE_DUPLICATE
 
@@ -702,13 +879,16 @@ def test_relationship_resolution_rejects_unpersisted_endpoints_when_enabled(
     )
     strict_service = RelationshipResolutionService(
         relationship_repository=resolution_database["relationship_repository"],
-        database_manager=database_manager,
         identity_resolver=identity_resolver,
         require_persisted_endpoints=True,
     )
 
-    with pytest.raises(RelationshipEndpointNotFoundError):
-        strict_service.resolve(RelationshipResolutionRequest(relationship))
+    with database_manager.connection() as connection:
+        with pytest.raises(RelationshipEndpointNotFoundError):
+            strict_service.resolve(
+                RelationshipResolutionRequest(relationship),
+                connection=connection,
+            )
 
 
 def test_resolution_contract_rejects_invalid_candidate_limits():

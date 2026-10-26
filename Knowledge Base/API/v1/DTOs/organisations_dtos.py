@@ -40,6 +40,7 @@ class CreateStartupRequest(BaseModel):
     business_model: StartupBusinessModels
 
     aliases: list[str] = Field(default_factory=list)
+    allow_possible_duplicate: bool = False
 
 
 class StartupResponse(BaseModel):
@@ -65,6 +66,7 @@ class CreateInvestorRequest(BaseModel):
     investor_type: InvestmentTypes
     investment_stage: InvestmentStage
     aliases: list[str] = Field(default_factory=list)
+    allow_possible_duplicate: bool = False
 
 
 class InvestorResponse(BaseModel):
@@ -86,6 +88,7 @@ class CreateIncubatorRequest(BaseModel):
 
     canonical_name: str = Field(min_length=1, max_length=255)
     aliases: list[str] = Field(default_factory=list)
+    allow_possible_duplicate: bool = False
 
 
 class IncubatorResponse(BaseModel):
@@ -148,6 +151,7 @@ class CreateAcceleratorRequest(BaseModel):
     programmes: list[AcceleratorProgrammeDTO] = Field(
         default_factory=list
     )
+    allow_possible_duplicate: bool = False
 
 
 class AcceleratorResponse(BaseModel):

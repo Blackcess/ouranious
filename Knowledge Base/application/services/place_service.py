@@ -9,6 +9,10 @@ from domain_models.Identity_model.Place_model.place import Place, PlaceKind
 
 from repositories.place_repository import PlaceRepository
 from infrastructure.database.connection import DatabaseManager
+from application.services.create_orchestration import resolve_and_create_identity
+from application.services.identity_resolution_service import IdentityResolutionService
+from application.resolution.create_result import CreateResult
+from application.resolution.identity.contracts import IdentityResolutionResult
 
 
 class PlaceService:
@@ -18,9 +22,11 @@ class PlaceService:
         *,
         place_repository: PlaceRepository,
         database_manager: DatabaseManager,
+        identity_resolution_service: IdentityResolutionService,
     ):
         self._place_repository = place_repository
         self._database_manager = database_manager
+        self._identity_resolution_service = identity_resolution_service
 
     def create(
         self,
@@ -29,7 +35,8 @@ class PlaceService:
         place_kind: PlaceKind,
         aliases: set[str] | None = None,
         lifecycle_state: LifecycleState = LifecycleState.CANONICAL,
-    ) -> Place:
+        allow_possible_duplicate: bool = False,
+    ) -> CreateResult[Place, IdentityResolutionResult]:
         """
         Create and persist a Place.
 
@@ -48,26 +55,13 @@ class PlaceService:
         )
 
         # 2. Persist the Place atomically.
-        return self._persist_place(place)
-
-    def _persist_place(
-        self,
-        place: Place,
-    ) -> Place:
-        """
-        Persist a Place atomically.
-
-        The repository performs persistence while this service
-        owns the transaction boundary.
-        """
-
-        with self._database_manager.transaction() as connection:
-            self._place_repository.save(
-                place,
-                connection=connection,
-            )
-
-        return place
+        return resolve_and_create_identity(
+            place,
+            repository=self._place_repository,
+            database_manager=self._database_manager,
+            resolver=self._identity_resolution_service,
+            allow_possible_duplicate=allow_possible_duplicate,
+        )
 
     def get_by_id(
         self,

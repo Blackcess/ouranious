@@ -2,7 +2,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from application.services.place_service import PlaceService
 from API.v1.dependancies.place_dependancies import get_place_service
@@ -10,6 +10,11 @@ from API.v1.DTOs.place_dtos import (
     CreatePlaceRequest,
     PlaceResponse,
     to_place_response,
+)
+from API.v1.DTOs.create_result_dtos import (
+    CreateResultResponse,
+    http_status_for_create_result,
+    to_create_result_response,
 )
 
 
@@ -21,8 +26,12 @@ router = APIRouter(
 
 @router.post(
     "",
-    response_model=PlaceResponse,
+    response_model=CreateResultResponse[PlaceResponse],
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_200_OK: {"model": CreateResultResponse[PlaceResponse]},
+        status.HTTP_409_CONFLICT: {"model": CreateResultResponse[PlaceResponse]},
+    },
 )
 def create_place(
     request: CreatePlaceRequest,
@@ -30,14 +39,16 @@ def create_place(
         PlaceService,
         Depends(get_place_service),
     ],
-) -> PlaceResponse:
-    place = service.create(
+    response: Response,
+) -> CreateResultResponse[PlaceResponse]:
+    result = service.create(
         canonical_name=request.canonical_name,
         place_kind=request.place_kind,
         aliases=set(request.aliases),
+        allow_possible_duplicate=request.allow_possible_duplicate,
     )
-
-    return to_place_response(place)
+    response.status_code = http_status_for_create_result(result)
+    return to_create_result_response(result, entity_mapper=to_place_response)
 
 
 @router.get(

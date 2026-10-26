@@ -26,6 +26,10 @@ from domain_models.Identity_model.Organisation_model.classification_specific_dom
     AcceleratorProgramme,
 )
 from domain_models.Identity_model.identity import IdentityReference
+from application.services.create_orchestration import resolve_and_create_identity
+from application.services.identity_resolution_service import IdentityResolutionService
+from application.resolution.create_result import CreateResult
+from application.resolution.identity.contracts import IdentityResolutionResult
 
 
 class OrganisationService:
@@ -34,9 +38,11 @@ class OrganisationService:
         *,
         organisation_repository: OrganisationRepository,
         database_manager: DatabaseManager,
+        identity_resolution_service: IdentityResolutionService,
     ):
         self._organisation_repository = organisation_repository
         self._database_manager = database_manager
+        self._identity_resolution_service = identity_resolution_service
 
     def create_startup(
         self,
@@ -46,7 +52,8 @@ class OrganisationService:
         stage: StartupStages,
         business_model: StartupBusinessModels,
         aliases: set[str] | None = None,
-    ) -> Organisation:
+        allow_possible_duplicate: bool = False,
+    ) -> CreateResult[Organisation, IdentityResolutionResult]:
         """
         Create and persist a complete Startup Organisation.
 
@@ -77,7 +84,10 @@ class OrganisationService:
         )
 
         # 4. Persist the complete aggregate atomically.
-        return self._persist_organisation(organisation)
+        return self._persist_organisation(
+            organisation,
+            allow_possible_duplicate=allow_possible_duplicate,
+        )
 
     def create_investor(
         self,
@@ -86,7 +96,8 @@ class OrganisationService:
         investor_type: InvestmentTypes,
         investment_stage: InvestmentStage,
         aliases: set[str] | None = None,
-    ) -> Organisation:
+        allow_possible_duplicate: bool = False,
+    ) -> CreateResult[Organisation, IdentityResolutionResult]:
         """
         Create and persist a complete Investor Organisation.
 
@@ -116,12 +127,17 @@ class OrganisationService:
         )
 
         # 4. Persist the complete aggregate atomically.
-        return self._persist_organisation(organisation)
+        return self._persist_organisation(
+            organisation,
+            allow_possible_duplicate=allow_possible_duplicate,
+        )
 
     def _persist_organisation(
         self,
         organisation: Organisation,
-    ) -> Organisation:
+        *,
+        allow_possible_duplicate: bool = False,
+    ) -> CreateResult[Organisation, IdentityResolutionResult]:
         """
         Persist a complete Organisation aggregate atomically.
 
@@ -129,13 +145,13 @@ class OrganisationService:
         the transaction boundary.
         """
 
-        with self._database_manager.transaction() as connection:
-            self._organisation_repository.save(
-                organisation,
-                connection=connection,
-            )
-
-        return organisation
+        return resolve_and_create_identity(
+            organisation,
+            repository=self._organisation_repository,
+            database_manager=self._database_manager,
+            resolver=self._identity_resolution_service,
+            allow_possible_duplicate=allow_possible_duplicate,
+        )
 
     def create_accelerator(
         self,
@@ -143,7 +159,8 @@ class OrganisationService:
         canonical_name: str,
         programmes: list[AcceleratorProgramme] | None = None,
         aliases: set[str] | None = None,
-    ) -> Organisation:
+        allow_possible_duplicate: bool = False,
+    ) -> CreateResult[Organisation, IdentityResolutionResult]:
         """
         Create and persist a complete Accelerator Organisation.
 
@@ -175,14 +192,18 @@ class OrganisationService:
         )
 
         # 4. Persist the complete aggregate atomically.
-        return self._persist_organisation(organisation)
+        return self._persist_organisation(
+            organisation,
+            allow_possible_duplicate=allow_possible_duplicate,
+        )
 
     def create_incubator(
         self,
         *,
         canonical_name: str,
         aliases: set[str] | None = None,
-    ) -> Organisation:
+        allow_possible_duplicate: bool = False,
+    ) -> CreateResult[Organisation, IdentityResolutionResult]:
         """
         Create and persist an Incubator Organisation.
 
@@ -205,7 +226,10 @@ class OrganisationService:
         # Incubator currently has no additional domain model.
 
         # 3. Persist the complete aggregate atomically.
-        return self._persist_organisation(organisation)
+        return self._persist_organisation(
+            organisation,
+            allow_possible_duplicate=allow_possible_duplicate,
+        )
 
     def get_organisation(
         self,

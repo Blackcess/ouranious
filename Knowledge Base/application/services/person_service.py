@@ -9,6 +9,10 @@ from domain_models.Identity_model.Person_model.person import Person
 
 from repositories.person_repository import PersonRepository
 from infrastructure.database.connection import DatabaseManager
+from application.services.create_orchestration import resolve_and_create_identity
+from application.services.identity_resolution_service import IdentityResolutionService
+from application.resolution.create_result import CreateResult
+from application.resolution.identity.contracts import IdentityResolutionResult
 
 
 class PersonService:
@@ -18,9 +22,11 @@ class PersonService:
         *,
         person_repository: PersonRepository,
         database_manager: DatabaseManager,
+        identity_resolution_service: IdentityResolutionService,
     ):
         self._person_repository = person_repository
         self._database_manager = database_manager
+        self._identity_resolution_service = identity_resolution_service
 
     def create(
         self,
@@ -28,7 +34,8 @@ class PersonService:
         canonical_name: str,
         aliases: set[str] | None = None,
         lifecycle_state: LifecycleState = LifecycleState.CANONICAL,
-    ) -> Person:
+        allow_possible_duplicate: bool = False,
+    ) -> CreateResult[Person, IdentityResolutionResult]:
         """
         Create and persist a Person.
 
@@ -44,23 +51,13 @@ class PersonService:
             lifecycle_state=lifecycle_state,
         )
 
-        return self._persist_person(person)
-
-    def _persist_person(
-        self,
-        person: Person,
-    ) -> Person:
-        """
-        Persist a Person atomically.
-        """
-
-        with self._database_manager.transaction() as connection:
-            self._person_repository.save(
-                person,
-                connection=connection,
-            )
-
-        return person
+        return resolve_and_create_identity(
+            person,
+            repository=self._person_repository,
+            database_manager=self._database_manager,
+            resolver=self._identity_resolution_service,
+            allow_possible_duplicate=allow_possible_duplicate,
+        )
 
     def get_by_id(
         self,

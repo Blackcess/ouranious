@@ -1,6 +1,6 @@
 from typing import Annotated
 from uuid import UUID
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Response
 from API.v1.dependancies.organisation_dependancies import get_organisation_service
 from API.v1.DTOs.organisations_dtos import CreateStartupRequest, StartupResponse
 from application.services.organisation_service import OrganisationService
@@ -21,6 +21,11 @@ from API.v1.DTOs.organisations_dtos import (
     to_accelerator_programme,
     OrganisationResponse
 )
+from API.v1.DTOs.create_result_dtos import (
+    CreateResultResponse,
+    http_status_for_create_result,
+    to_create_result_response,
+)
 
 
 router = APIRouter(
@@ -31,33 +36,44 @@ router = APIRouter(
 # create startup route
 @router.post(
     "/startups",
-    response_model = StartupResponse,
-    status_code = status.HTTP_201_CREATED
+    response_model = CreateResultResponse[StartupResponse],
+    status_code = status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_200_OK: {"model": CreateResultResponse[StartupResponse]},
+        status.HTTP_409_CONFLICT: {"model": CreateResultResponse[StartupResponse]},
+    },
 )
 def  create_startup(
     request : CreateStartupRequest,
     service : Annotated[
         OrganisationService,
         Depends(get_organisation_service)
-    ]
-)->StartupResponse:
-    organisation = service.create_startup(
+    ],
+    response: Response,
+)->CreateResultResponse[StartupResponse]:
+    result = service.create_startup(
         canonical_name= request.canonical_name,
         founding_year = request.founding_year,
         stage = request.stage,
         business_model = request.business_model,
-        aliases= set(request.aliases)
+        aliases= set(request.aliases),
+        allow_possible_duplicate=request.allow_possible_duplicate,
     )
-
-    return to_startup_response(
-        organisation= organisation
+    response.status_code = http_status_for_create_result(result)
+    return to_create_result_response(
+        result,
+        entity_mapper=to_startup_response,
     )
 
 # Create Investor route
 @router.post(
     "/investors",
-    response_model=InvestorResponse,
+    response_model=CreateResultResponse[InvestorResponse],
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_200_OK: {"model": CreateResultResponse[InvestorResponse]},
+        status.HTTP_409_CONFLICT: {"model": CreateResultResponse[InvestorResponse]},
+    },
 )
 def create_investor(
     request: CreateInvestorRequest,
@@ -65,21 +81,27 @@ def create_investor(
         OrganisationService,
         Depends(get_organisation_service),
     ],
-) -> InvestorResponse:
-    organisation = service.create_investor(
+    response: Response,
+) -> CreateResultResponse[InvestorResponse]:
+    result = service.create_investor(
         canonical_name=request.canonical_name,
         investor_type=request.investor_type,
         investment_stage=request.investment_stage,
         aliases=set(request.aliases),
+        allow_possible_duplicate=request.allow_possible_duplicate,
     )
-
-    return to_investor_response(organisation)
+    response.status_code = http_status_for_create_result(result)
+    return to_create_result_response(result, entity_mapper=to_investor_response)
 
 # craate accelerator route
 @router.post(
     "/accelerators",
-    response_model=AcceleratorResponse,
+    response_model=CreateResultResponse[AcceleratorResponse],
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_200_OK: {"model": CreateResultResponse[AcceleratorResponse]},
+        status.HTTP_409_CONFLICT: {"model": CreateResultResponse[AcceleratorResponse]},
+    },
 )
 def create_accelerator(
     request: CreateAcceleratorRequest,
@@ -87,25 +109,31 @@ def create_accelerator(
         OrganisationService,
         Depends(get_organisation_service),
     ],
-) -> AcceleratorResponse:
+    response: Response,
+) -> CreateResultResponse[AcceleratorResponse]:
     programmes = [
         to_accelerator_programme(programme)
         for programme in request.programmes
     ]
 
-    organisation = service.create_accelerator(
+    result = service.create_accelerator(
         canonical_name=request.canonical_name,
         programmes=programmes,
         aliases=set(request.aliases),
+        allow_possible_duplicate=request.allow_possible_duplicate,
     )
-
-    return to_accelerator_response(organisation)
+    response.status_code = http_status_for_create_result(result)
+    return to_create_result_response(result, entity_mapper=to_accelerator_response)
 
 # create incubator route
 @router.post(
     "/incubators",
-    response_model=IncubatorResponse,
+    response_model=CreateResultResponse[IncubatorResponse],
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_200_OK: {"model": CreateResultResponse[IncubatorResponse]},
+        status.HTTP_409_CONFLICT: {"model": CreateResultResponse[IncubatorResponse]},
+    },
 )
 def create_incubator(
     request: CreateIncubatorRequest,
@@ -113,13 +141,15 @@ def create_incubator(
         OrganisationService,
         Depends(get_organisation_service),
     ],
-) -> IncubatorResponse:
-    organisation = service.create_incubator(
+    response: Response,
+) -> CreateResultResponse[IncubatorResponse]:
+    result = service.create_incubator(
         canonical_name=request.canonical_name,
         aliases=set(request.aliases),
+        allow_possible_duplicate=request.allow_possible_duplicate,
     )
-
-    return to_incubator_response(organisation)
+    response.status_code = http_status_for_create_result(result)
+    return to_create_result_response(result, entity_mapper=to_incubator_response)
 
 # ======================================================
 # GET ORGANISATION BY ID

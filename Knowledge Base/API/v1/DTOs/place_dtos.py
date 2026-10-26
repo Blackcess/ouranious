@@ -9,6 +9,7 @@ class CreatePlaceRequest(BaseModel):
     canonical_name: str = Field(min_length=1)
     place_kind: PlaceKind
     aliases: list[str] = Field(default_factory=list)
+    allow_possible_duplicate: bool = False
 
 
 class PlaceResponse(BaseModel):

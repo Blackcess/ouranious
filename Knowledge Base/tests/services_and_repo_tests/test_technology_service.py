@@ -2,29 +2,18 @@ from domain_models.Identity_model.identity import (
     IdentityKind,
     LifecycleState,
 )
-
-from infrastructure.database.connection import DatabaseManager
-from repositories.technology_repository import TechnologyRepository
-from application.services.technology_service import TechnologyCreationService
+from uuid import uuid4
 
 
-def test_technology_creation_service_round_trip():
+def test_technology_creation_service_round_trip(service_environment):
+    technology_service = service_environment["technology"]
+    canonical_name = f"React {uuid4().hex}"
+    aliases = {f"React.js {uuid4().hex}", f"ReactJS {uuid4().hex}"}
 
-    database_manager = DatabaseManager()
-    technology_repository = TechnologyRepository()
-
-    technology_service = TechnologyCreationService(
-        technology_repository=technology_repository,
-        database_manager=database_manager,
-    )
-
-    technology = technology_service.create(
-        canonical_name="React",
-        aliases={
-            "React.js",
-            "ReactJS",
-        },
-    )
+    result = technology_service.create(canonical_name=canonical_name, aliases=aliases)
+    technology = result.entity
+    service_environment["track_identity"](technology)
+    assert result.action.value == "created"
 
     retrieved = technology_service.get_by_id(
         technology.reference,
@@ -38,14 +27,7 @@ def test_technology_creation_service_round_trip():
 
     assert (
         retrieved.representations.canonical_name
-        == "React"
+        == canonical_name
     )
 
-    assert retrieved.representations.aliases == {
-        "React.js",
-        "ReactJS",
-    }
-
-    print("Test Passed")
-
-test_technology_creation_service_round_trip()
+    assert retrieved.representations.aliases == aliases

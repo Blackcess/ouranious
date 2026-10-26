@@ -1,5 +1,6 @@
 
 from uuid import UUID
+from pymysql.connections import Connection
 
 from domain_models.Identity_model.identity import (
     Identity,
@@ -41,6 +42,8 @@ class IdentityResolver:
     def get_by_id(
         self,
         identity_id: UUID | IdentityReference,
+        *,
+        connection: Connection | None = None,
     ) -> Identity | None:
         """
         Resolve and reconstruct an identity using its UUID.
@@ -49,14 +52,22 @@ class IdentityResolver:
         Repository integrity errors propagate to the caller.
         """
 
-        with self._database_manager.connection() as connection:
-            for repository in self._repositories:
-                identity = repository.get_by_id(
-                    identity_id,
-                    connection=connection,
-                )
+        if connection is not None:
+            return self._get_by_id_with_connection(identity_id, connection)
 
-                if identity is not None:
-                    return identity
+        with self._database_manager.connection() as owned_connection:
+            return self._get_by_id_with_connection(identity_id, owned_connection)
 
+    def _get_by_id_with_connection(
+        self,
+        identity_id: UUID | IdentityReference,
+        connection: Connection,
+    ) -> Identity | None:
+        for repository in self._repositories:
+            identity = repository.get_by_id(
+                identity_id,
+                connection=connection,
+            )
+            if identity is not None:
+                return identity
         return None

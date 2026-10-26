@@ -11,6 +11,7 @@ class CreateProductRequest(BaseModel):
 
     canonical_name: str = Field(min_length=1)
     aliases: list[str] = Field(default_factory=list)
+    allow_possible_duplicate: bool = False
 
 
 class ProductResponse(BaseModel):

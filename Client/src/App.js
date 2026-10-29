@@ -1,6 +1,6 @@
 import "./index.css"
 import "./App.css"
-import {Routes,Route} from "react-router-dom"
+import {Navigate,Routes,Route} from "react-router-dom"
 import RecquireAuth from "./Recquire Authentication/RecquireAuth";
 import {Login} from "./Login/Login";
 import { CreateAccount } from "./Account Creation/CreateAccount";
@@ -18,7 +18,8 @@ import OnboardingStepper from "./Account Creation/onboarding/steps/main stepper/
 import { JoinCommunity } from "./Community/Join Community/JoinCommunity";
 import { PublishedArticles } from "./Admnistration Section/Admin Layout/My Articles/published articles/PublishedArticles";
 import {DraftArticles} from "./Admnistration Section/Admin Layout/My Articles/draft articles/DraftArticles"
-import ProvenanceWorkspace from "./features/provenance/ProvenanceWorkspace";
+import ProvenanceWorkspace, { ClaimCreatorRoute, ClaimReviewRoute } from "./features/provenance/ProvenanceWorkspace";
+import SourceManager from "./features/provenance/components/SourceManager";
 
 function App() {
   
@@ -40,7 +41,12 @@ function App() {
           <Route path="category/:id" element={<CategoryPageWrapper />}/>
           <Route path="uploads" element={<ArticleEditorPage />}/>
           <Route path="community" element ={<JoinCommunity/>} />
-          <Route path="provenance" element={<ProvenanceWorkspace/>} />
+          <Route path="provenance" element={<ProvenanceWorkspace/>}>
+            <Route index element={<Navigate to="/provenance/review" replace />} />
+            <Route path="review/:claimId?" element={<ClaimReviewRoute />} />
+            <Route path="claims/new" element={<ClaimCreatorRoute />} />
+            <Route path="sources/new" element={<SourceManager />} />
+          </Route>
           <Route path="admin" element={<AdminLayout/>}>
             <Route index element= {<PublishedArticles/>}/>
             <Route path="published" element= {<PublishedArticles/>}/>

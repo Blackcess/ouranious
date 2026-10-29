@@ -44,6 +44,7 @@ def materialise_claim(
             claim_id,
             allow_possible_duplicate=request.allow_possible_duplicate,
         )
+        
         if result.action is None:
             response.status_code = status.HTTP_409_CONFLICT
         elif result.already_materialised or result.action.value == "linked":

@@ -1,7 +1,30 @@
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import ProvenanceWorkspace from "./ProvenanceWorkspace";
+import { MemoryRouter, useLocation } from "react-router-dom";
+import App from "../../App";
 import { provenanceApi } from "../../api/provenance/provenanceApi";
+
+jest.mock("../../Parent Page/ParentComponent", () => {
+  const React = require("react");
+  const { Outlet } = require("react-router-dom");
+  return {
+    __esModule: true,
+    default: function TestParentComponent() { return React.createElement(Outlet); },
+    ScreenData: React.createContext(null),
+  };
+});
+
+jest.mock("../../Recquire Authentication/RecquireAuth", () => {
+  const React = require("react");
+  return {
+    __esModule: true,
+    default: function TestRecquireAuth({ children }) { return React.createElement(React.Fragment, null, children); },
+  };
+});
+
+jest.mock("axios", () => ({
+  create: jest.fn(() => ({ get: jest.fn() })),
+}));
 
 jest.mock("../../api/provenance/provenanceApi", () => ({
   enums: { sourceTypes: ["report"], claimStatuses: ["draft", "accepted"], allowedStatusTransitions: { draft: ["accepted"] }, assessmentOutcomes: ["accept"], identityKinds: ["organisation"], relationshipTypes: ["founded"] },
@@ -12,9 +35,35 @@ const claim = { id: "5e45ed40-cced-4ad2-8cd1-320f41fe0747", status: "draft", res
 
 beforeEach(() => jest.clearAllMocks());
 
+function renderWorkspace(initialEntry = "/provenance/review") {
+  function LocationProbe() {
+    const { pathname } = useLocation();
+    return <output data-testid="pathname">{pathname}</output>;
+  }
+
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}><LocationProbe /><App /></MemoryRouter>,
+  );
+}
+
+test("renders only the selected workflow and navigates between routes", () => {
+  renderWorkspace();
+  const navigation = within(screen.getByRole("navigation", { name: "Provenance workflows" }));
+
+  expect(screen.getByRole("heading", { name: "Open a claim" })).toBeInTheDocument();
+  fireEvent.click(navigation.getByRole("link", { name: "Add a source" }));
+  expect(screen.getByRole("heading", { name: "Add a source" })).toBeInTheDocument();
+  expect(screen.getAllByPlaceholderText("Source UUID")).toHaveLength(1);
+  expect(screen.getAllByRole("button", { name: "Create source" })).toHaveLength(1);
+
+  fireEvent.click(navigation.getByRole("link", { name: "Create claim" }));
+  expect(screen.getByLabelText(/Canonical name/)).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Add a source" })).not.toBeInTheDocument();
+});
+
 test("claim form switches controls for all four proposition variants", () => {
-  render(<ProvenanceWorkspace />);
-  fireEvent.click(within(screen.getByRole("navigation", { name: "Provenance workflows" })).getByRole("button", { name: "Create claim" }));
+  renderWorkspace();
+  fireEvent.click(within(screen.getByRole("navigation", { name: "Provenance workflows" })).getByRole("link", { name: "Create claim" }));
   expect(screen.getByLabelText(/Canonical name/)).toBeInTheDocument();
   const selector = screen.getByLabelText(/Proposition type/);
   fireEvent.change(selector, { target: { value: "identity_attribute" } });
@@ -25,13 +74,45 @@ test("claim form switches controls for all four proposition variants", () => {
   expect(screen.getByLabelText(/Relationship UUID/)).toBeInTheDocument();
 });
 
+test("hands a newly created claim from ClaimCreator into the existing review workflow", async () => {
+  provenanceApi.createClaim.mockResolvedValue(claim);
+  provenanceApi.getClaim.mockResolvedValue(claim);
+  provenanceApi.getAssessments.mockResolvedValue([]);
+  renderWorkspace();
+  const navigation = within(screen.getByRole("navigation", { name: "Provenance workflows" }));
+  fireEvent.click(navigation.getByRole("link", { name: "Create claim" }));
+  fireEvent.change(screen.getByLabelText(/Canonical name/), { target: { value: "Example" } });
+  fireEvent.click(within(screen.getByRole("heading", { name: "Propose a knowledge change" }).closest("section")).getByRole("button", { name: "Create claim" }));
+
+  expect(await screen.findByRole("heading", { name: "Open a claim" })).toBeInTheDocument();
+  expect(screen.getByPlaceholderText("Claim UUID")).toHaveValue(claim.id);
+  expect(await screen.findByRole("heading", { name: "Example" })).toBeInTheDocument();
+  expect(provenanceApi.getClaim).toHaveBeenCalledWith(claim.id);
+  expect(provenanceApi.createClaim).toHaveBeenCalledWith({
+    proposition: {
+      proposition_type: "identity_proposal",
+      identity_kind: "organisation",
+      canonical_name: "Example",
+      aliases: [],
+      attributes: {},
+    },
+    source_ids: [],
+    research_notes: "",
+  });
+
+  fireEvent.click(navigation.getByRole("link", { name: "Add a source" }));
+  expect(screen.getByRole("heading", { name: "Add a source" })).toBeInTheDocument();
+  fireEvent.click(navigation.getByRole("link", { name: "Create claim" }));
+  expect(screen.getByLabelText(/Canonical name/)).toHaveValue("Example");
+});
+
 test("claim review preserves and displays multiple assessment records", async () => {
   provenanceApi.getClaim.mockResolvedValue(claim);
   provenanceApi.getAssessments.mockResolvedValue([
     { id: "assessment-1", outcome: "accept", assessed_by: "A. Reviewer", rationale: "Evidence supports the claim.", assessed_at: "2026-10-24T10:01:00Z", review_process: null },
     { id: "assessment-2", outcome: "request_more_research", assessed_by: "B. Reviewer", rationale: "Check the filing date.", assessed_at: "2026-10-24T10:02:00Z", review_process: "Peer review" },
   ]);
-  render(<ProvenanceWorkspace />);
+  renderWorkspace();
   fireEvent.change(screen.getByPlaceholderText("Claim UUID"), { target: { value: claim.id } });
   fireEvent.click(screen.getByRole("button", { name: "Load" }));
   expect(await screen.findByRole("heading", { name: /Assessment history/ })).toBeInTheDocument();
@@ -46,7 +127,7 @@ test("nullable assessment status and blocked materialisation are shown faithfull
   provenanceApi.createAssessment.mockResolvedValue({ assessment, claim_status: null });
   provenanceApi.materialise.mockResolvedValue({ status: 409, data: { claim_id: claim.id, target_kind: "identity", target_id: null, outcome: "possible_duplicate", action: null, override_applied: false, already_materialised: false, candidates: [{ id: "candidate-1", kind: "organisation", canonical_name: "Example Org", match_kind: "possible", evidence: {} }], candidates_truncated: true } });
   const confirm = jest.spyOn(window, "confirm").mockReturnValue(true);
-  render(<ProvenanceWorkspace />);
+  renderWorkspace();
   fireEvent.change(screen.getByPlaceholderText("Claim UUID"), { target: { value: claim.id } });
   fireEvent.click(screen.getByRole("button", { name: "Load" }));
   await screen.findByRole("heading", { name: "Example" });
